@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sidang Teks Diskusi</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b1713">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sidang Diskusi">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Chango&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e6d9b8;--card:#f3e9cd;--ink:#1b1713;--mute:#5d513c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#26211a;--card:#352d23;--ink:#eadfc2;--mute:#b6a98c}}
+:root[data-theme="dark"]{--bg:#26211a;--card:#352d23;--ink:#eadfc2;--mute:#b6a98c}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'Special Elite','Courier New',monospace;min-height:100vh}
+h1,h2,h3,.ttl{font-family:'Chango',Impact,'Arial Black',sans-serif;font-weight:400;line-height:1.15;margin:0}
+.wrap{max-width:820px;margin:0 auto;padding:14px}
+.film{position:fixed;inset:-5%;pointer-events:none;z-index:60;mix-blend-mode:multiply;opacity:.3;animation:fl .14s steps(2) infinite;background:radial-gradient(ellipse at center,transparent 55%,rgba(40,25,5,.55)),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.film::before{content:"";position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.35);animation:scr 3.3s linear infinite}
+@keyframes fl{0%{transform:translate(0,0);opacity:.24}50%{transform:translate(-1.5%,1%);opacity:.38}100%{transform:translate(1%,-1.5%);opacity:.28}}
+@keyframes scr{0%{left:8%}30%{left:71%}60%{left:33%}100%{left:92%}}
+.film{display:none}body.sd .film{display:block}
+header{text-align:center;padding:6px 0}
+header h1{font-size:clamp(24px,6.5vw,42px);text-shadow:3px 3px 0 var(--mute)}
+header p{margin:6px 0 0;color:var(--mute);font-size:14px}
+nav{display:flex;gap:8px;justify-content:center;margin:10px 0;flex-wrap:wrap;align-items:center}
+.btn,nav button{font-family:'Chango',Impact,sans-serif;font-size:14px;background:var(--ink);color:var(--bg);border:3px solid var(--ink);border-radius:30px;padding:8px 18px;cursor:pointer;transition:transform .12s}
+.btn:hover,nav button:hover{transform:scale(1.06) rotate(-1deg)}
+nav button.off{background:transparent;color:var(--ink)}
+.badge{border:3px double var(--ink);border-radius:20px;padding:2px 12px;font-size:14px}
+.card0{background:var(--card);border:3px solid var(--ink);border-radius:16px;padding:14px;box-shadow:5px 5px 0 var(--ink);margin-top:12px}
+.reel{display:flex;gap:8px;overflow-x:auto;padding:6px 4px 10px}
+.reel button{flex:0 0 auto;font:inherit;background:var(--card);color:var(--ink);border:3px solid var(--ink);border-radius:12px;padding:4px 10px;cursor:pointer;min-width:80px;text-align:center}
+.reel button.on{background:var(--ink);color:var(--bg)}
+.reel b{display:block;font-family:'Chango',Impact,sans-serif;font-weight:400;font-size:18px}
+.reel small{font-size:11px}
+.hint{color:var(--mute);font-size:14px}
+.btn{display:inline-block;text-decoration:none}.link{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;cursor:pointer;padding:0}
+.item{font-size:18px;font-weight:bold;margin:10px 0;padding:12px;border:3px dashed var(--ink);border-radius:12px}
+.opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.opt{font:inherit;font-weight:bold;background:transparent;color:var(--ink);border:3px solid var(--ink);border-radius:12px;padding:10px;cursor:pointer}
+@media (hover:hover){.opt:hover:not(:disabled){background:var(--ink);color:var(--bg)}}
+.opt.bad{text-decoration:line-through;animation:shake .4s}
+.opt.good{background:var(--ink);color:var(--bg)}
+.fb{font-weight:bold;margin:10px 0}
+.nv{display:flex;justify-content:space-between;gap:8px;margin-top:10px;flex-wrap:wrap}
+.word{cursor:pointer;padding:0 2px;border-radius:4px}
+.word:hover{background:rgba(120,100,60,.3)}
+.word.hit{background:var(--ink);color:var(--bg)}
+.word.no{animation:shake .4s}
+.scl{width:170px;display:block;margin:0 auto}
+#beam{transition:transform .9s cubic-bezier(.3,1.6,.5,1)}
+/* PANGGUNG: kamera pseudo-3D */
+.stage{position:relative;aspect-ratio:3/2;max-height:66vh;width:100%;overflow:hidden;border:4px solid #111;border-radius:12px;background:#d9cba6;perspective:800px;box-shadow:5px 5px 0 var(--ink)}
+.shaker{position:absolute;inset:0}
+.sk{animation:skk .5s}
+@keyframes skk{0%,100%{transform:translate(0)}20%{transform:translate(-9px,4px)}40%{transform:translate(8px,-5px)}60%{transform:translate(-6px,3px)}80%{transform:translate(4px,-2px)}}
+.cam{position:absolute;inset:0;--i:1;--z:1.04;--ry:0deg;filter:saturate(1.08) contrast(1.05);transform:perspective(900px) rotateY(var(--ry)) scale(var(--z));transition:transform .9s cubic-bezier(.5,0,.2,1)}
+.layer{position:absolute;top:0;bottom:0;left:0;transition:transform .9s cubic-bezier(.5,0,.2,1)}
+.bg{width:240%;transform:translateX(calc(var(--i) * -29.1667%))}
+.mid{width:300%;transform:translateX(calc(var(--i) * -33.3333%))}
+.fg{width:360%;transform:translateX(calc(var(--i) * -36.1111%));pointer-events:none}
+.wall{position:absolute;inset:0 0 34% 0;background:linear-gradient(#d8ccaa,#b9aa82)}
+.cols{position:absolute;inset:0 0 34% 0;background:repeating-linear-gradient(90deg,transparent 0 12.5%,#7d6f52 12.5% 13%,#efe5c6 13% 15.5%,#7d6f52 15.5% 16%,transparent 16% 25%)}
+.win{position:absolute;top:8%;width:12%;height:38%;transform:translateX(-50%);border:5px solid #5d513c;border-radius:200px 200px 0 0;background:linear-gradient(90deg,transparent 48%,#5d513c 48% 52%,transparent 52%),linear-gradient(#fbf6e4,#cfc39f)}
+.seal{position:absolute;top:2%;transform:translateX(-50%);font-size:64px;opacity:.5}
+.floor{position:absolute;left:-10%;right:-10%;bottom:-14%;height:58%;background:repeating-conic-gradient(#7d6f52 0 25%,#b3a47e 0 50%) 0 0/80px 80px;transform:perspective(240px) rotateX(48deg);transform-origin:50% 0;box-shadow:inset 0 30px 40px -10px rgba(0,0,0,.5)}
+.ch{position:absolute;bottom:7%;height:80%;aspect-ratio:200/420}
+.c-n{left:16.667%;transform:translateX(-50%) perspective(700px) rotateY(16deg)}
+.c-g{left:83.333%;transform:translateX(-50%) scaleX(-1) perspective(700px) rotateY(16deg)}
+.c-h{left:50%;bottom:15%;height:78%;transform:translateX(-50%);z-index:1}
+.bench{position:absolute;left:50%;bottom:0;width:26%;height:44%;transform:translateX(-50%);z-index:2;background:repeating-linear-gradient(90deg,rgba(0,0,0,.2) 0 2px,transparent 2px 16px),linear-gradient(#4a3a28,#1c140d);border-top:10px solid #a69670;box-shadow:0 -4px 0 #111}
+.desk{position:absolute;bottom:0;height:38%;width:22%;transform:translateX(-50%);background:repeating-linear-gradient(90deg,rgba(0,0,0,.2) 0 2px,transparent 2px 14px),linear-gradient(#3a2d20,#150f0a);border-top:9px solid #a69670;box-shadow:0 -4px 0 #111}
+.dl{left:13.89%}.dr{left:86.11%}
+.nodesk .fg,.nodesk .bench{opacity:0}
+.nodesk .c-h{bottom:7%;height:80%}
+.fl{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:6}
+.fl.on{animation:fla .4s}
+@keyframes fla{0%{opacity:.9}100%{opacity:0}}
+.st{position:absolute;left:50%;top:30%;z-index:7;transform:translate(-50%,-50%) rotate(-6deg) scale(0);font-family:'Chango',Impact,sans-serif;font-size:clamp(28px,9vw,64px);color:#fff;-webkit-text-stroke:7px #111;paint-order:stroke fill;pointer-events:none;white-space:nowrap}
+.st.on{animation:stp 1.1s forwards}
+@keyframes stp{0%{transform:translate(-50%,-50%) rotate(-6deg) scale(3);opacity:0}15%,85%{transform:translate(-50%,-50%) rotate(-6deg) scale(1);opacity:1}100%{transform:translate(-50%,-50%) rotate(-6deg) scale(1.1);opacity:0}}
+.tb{position:relative;margin-top:14px;background:#14100b;color:#f3ead0;border:3px solid #f3ead0;outline:3px solid #14100b;border-radius:10px;padding:14px 16px 16px;min-height:84px;font-size:clamp(14px,2.8vw,17px);cursor:pointer}
+.tb .nm{position:absolute;top:-15px;left:12px;background:#f3ead0;color:#111;font-family:'Chango',Impact,sans-serif;font-size:12px;padding:2px 12px;border-radius:8px}
+.tb .ar{position:absolute;right:12px;bottom:6px;opacity:0}
+.tb.rdy .ar{opacity:1;animation:bl 1s infinite}
+@keyframes bl{50%{opacity:0}}
+/* rig manusia */
+.pp{width:100%;height:100%;overflow:visible}
+.pp .aL,.pp .aR,.pp .fL,.pp .fR,.pp .head{transition:transform .4s cubic-bezier(.3,1.5,.5,1)}
+.pp .head{transform-origin:100px 160px;animation:hb 3s ease-in-out infinite alternate}
+@keyframes hb{to{transform:rotate(2deg) translateY(-1px)}}
+.pp .bod{transform-origin:100px 250px;animation:br 2.4s ease-in-out infinite alternate}
+@keyframes br{to{transform:scaleY(1.014)}}
+.pp .eyes{transform-origin:100px 114px;animation:bk 4.5s infinite}
+@keyframes bk{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.pp .brw path{transform-box:fill-box;transform-origin:center;transition:transform .3s}
+.pp .mo{transform-origin:100px 142px;transform:scaleY(0);transition:transform .15s}
+.pp .fing,.pp .swt{opacity:0}
+.say .mo{animation:yp .2s infinite alternate}
+.say .mc{opacity:0}
+@keyframes yp{from{transform:scaleY(.15)}to{transform:scaleY(1)}}
+.p-talk .aR{animation:g1 .7s infinite alternate ease-in-out}
+.p-talk .aL{animation:g2 .9s infinite alternate ease-in-out}
+.p-talk .fR{transform:rotate(55deg)}
+@keyframes g1{from{transform:rotate(-14deg)}to{transform:rotate(-46deg)}}
+@keyframes g2{from{transform:rotate(8deg)}to{transform:rotate(28deg)}}
+.p-point .aR{transform:rotate(-100deg)}.p-point .fR{transform:rotate(-6deg)}.p-point .fing{opacity:1}.p-point .head{transform:rotate(-4deg)}
+.p-think .aR{transform:rotate(112deg)}.p-think .fR{transform:rotate(60deg)}.p-think .head{transform:rotate(-6deg)}
+.p-sweat .swt{opacity:1;animation:swd .6s infinite alternate}
+@keyframes swd{to{transform:translateY(6px)}}
+.p-sweat .aL{transform:rotate(30deg)}.p-sweat .aR{transform:rotate(-30deg)}.p-sweat .fL{transform:rotate(-35deg)}.p-sweat .fR{transform:rotate(35deg)}.p-sweat .head{animation:hs .25s infinite alternate}
+@keyframes hs{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+.p-cheer .aL{transform:rotate(155deg)}.p-cheer .aR{transform:rotate(-155deg)}
+.p-nod .head{animation:nd .5s 2}
+@keyframes nd{50%{transform:translateY(8px) rotate(4deg)}}
+.p-no .head{animation:hs .15s 4 alternate}
+.p-no .aL{transform:rotate(40deg)}.p-no .aR{transform:rotate(-40deg)}
+.f-a .bl{transform:rotate(16deg)}.f-a .br{transform:rotate(-16deg)}
+.f-s .brw{transform:translateY(-6px)}.f-s .mo{transform:scaleY(1)}
+.f-h .mc{d:path("M80 134 Q100 158 120 134")}
+/* game */
+.meter{margin:6px 0 10px}
+.mt{height:26px;border:4px solid var(--ink);border-radius:20px;overflow:hidden;background:var(--card)}
+.mf{height:100%;width:50%;background:repeating-linear-gradient(45deg,var(--ink) 0 8px,var(--mute) 8px 16px);transition:width .8s cubic-bezier(.3,1.6,.5,1)}
+.ml{display:flex;justify-content:space-between;font-size:13px;margin-top:3px}
+.cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:6px}
+.gc{position:relative;text-align:left;font:inherit;font-size:15px;background:var(--card);color:var(--ink);border:3px solid var(--ink);border-radius:14px;padding:30px 12px 12px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .15s}
+.gc:hover:not(:disabled){transform:translateY(-5px) rotate(-1.5deg)}
+.gc:disabled{cursor:default;opacity:.55}.gc.pk{opacity:1;outline:4px solid var(--ink)}
+.gc.gone{display:none}
+.tp{position:absolute;top:-3px;left:-3px;background:var(--ink);color:var(--bg);font-family:'Chango',Impact,sans-serif;font-size:12px;padding:3px 12px;border-radius:12px 0 12px 0}
+.cs{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-top:10px}
+.cs .card0{cursor:pointer;margin:0}
+.cs .card0:hover{transform:rotate(-1deg)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){*,.film{animation:none!important}.st.on{transform:translate(-50%,-50%) rotate(-6deg) scale(1)!important}}
+.kartu{margin-top:10px}.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-top:6px}.kd{border:3px solid var(--ink);border-radius:12px;background:var(--card);padding:10px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}.kf{font-weight:700}.kf::after{content:" ▾";float:right}.kb{display:none;margin-top:6px;font-size:14px;line-height:1.5}.kd.f .kb{display:block}
+.tome{--pg:#f1e4bf;--tx:#2a1f12;background:linear-gradient(90deg,rgba(90,60,20,.18),transparent 6%,transparent 94%,rgba(90,60,20,.18)),var(--pg);color:var(--tx);border:4px double #5b3a1a;border-radius:6px 14px 14px 6px;padding:22px clamp(16px,4vw,38px);box-shadow:0 0 0 6px #3a2410,8px 10px 0 6px rgba(0,0,0,.35);font-family:Georgia,'Times New Roman',serif}
+.tome h2{font-family:Georgia,serif;font-style:italic;font-weight:700;text-align:center;font-size:clamp(20px,4.6vw,30px);margin:6px 0}.tome .rh,.tome .ft{text-align:center;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#7a5a30}.tome .orn{text-align:center;color:#8a6a3a;margin:6px 0 10px}
+.tome .pages{columns:2 300px;column-gap:44px;column-rule:1px solid rgba(90,60,20,.4);font-size:17px;line-height:1.7;text-align:justify}.tome p{margin:0 0 .7em;text-indent:1.4em}.tome p:first-child::first-letter{font-size:3.1em;float:left;line-height:.85;padding:4px 6px 0 0;color:#5b2410;font-weight:700}
+.tome sup{font-size:.6em;color:#8a4a20;margin-right:3px;font-weight:700}.tome .lb{display:inline-block;font:700 11px 'Special Elite',monospace;text-transform:uppercase;border:1.5px solid #5b3a1a;border-radius:3px;padding:0 5px;margin-right:6px;text-indent:0;background:#e3cf9a}.tome .pro .lb{background:#cfe0b8}.tome .kontra .lb{background:#e8b9a8}.tome .simpulan .lb{background:#c9c0dd}.tome .ft{margin-top:6px;text-transform:none;font-style:italic;letter-spacing:.05em}
+.map{border:3px dashed var(--ink);border-radius:12px;padding:8px 12px;margin:8px 0;font-size:14px}.tpl{font-weight:700;margin:0 0 8px}.rpg{background:var(--card);border:3px solid var(--ink);border-radius:16px;padding:14px;box-shadow:5px 5px 0 var(--ink)}.rpg h3{font-size:20px;margin:4px 0 8px}.dots{display:flex;gap:6px}.dots i{height:8px;flex:1;border:2px solid var(--ink);border-radius:6px}.dots i.on{background:var(--ink)}.note0{border-left:6px solid var(--ink);background:rgba(0,0,0,.06);padding:8px 12px;margin:10px 0}.rvq,.mcq{border:3px solid var(--ink);border-radius:12px;padding:10px 12px;margin:10px 0}.mcq .opt{display:block;width:100%;margin:6px 0;text-align:left}.fbx{margin:6px 0 0;font-size:15px}.chips{display:grid;gap:8px;margin:10px 0}.chip{border:3px solid var(--ink);border-radius:12px;padding:8px 12px;cursor:pointer}.chip i{display:none;font-style:normal;font-weight:700;margin-top:4px}.chip.on i{display:block}.chip.on{background:var(--ink);color:var(--bg)}.tw{overflow-x:auto;margin:10px 0}.rpg table{border-collapse:collapse;width:100%;font-size:14px}.rpg th,.rpg td{border:2px solid var(--ink);padding:6px 8px;text-align:left;vertical-align:top}.bars0{display:grid;gap:6px;margin:10px 0}.br0{display:grid;grid-template-columns:110px 1fr 52px;gap:8px;align-items:center;border:0;background:none;color:var(--ink);font:inherit;cursor:pointer;text-align:left}.br0 i{display:block;height:16px;background:var(--ink);border-radius:4px}.cr{display:grid;gap:6px;margin:6px 0 12px}.cr button{font:inherit;font-weight:700;border:3px solid var(--ink);border-radius:12px;background:transparent;color:var(--ink);padding:8px 12px;text-align:left;cursor:pointer}.cr button.on{background:var(--ink);color:var(--bg)}.stp0{list-style:none;padding:0}
+.gd{display:flex;align-items:center;gap:10px;margin:4px 0 6px}.gd h3{margin:0}.gv{width:58px;height:58px;flex:none;border:3px solid var(--ink);border-radius:50%;background:#bfe3df;overflow:hidden}.gv svg.pp{overflow:hidden;display:block}
+.p-slam .aL{animation:slL .9s forwards}.p-slam .aR{animation:slR .9s forwards}.p-slam .head{animation:slH .9s forwards}
+@keyframes slL{0%{transform:rotate(0)}40%,58%{transform:rotate(150deg)}72%,100%{transform:rotate(8deg)}}
+@keyframes slR{0%{transform:rotate(0)}40%,58%{transform:rotate(-150deg)}72%,100%{transform:rotate(-8deg)}}
+@keyframes slH{40%,58%{transform:rotate(-6deg) translateY(-6px)}72%,100%{transform:translateY(12px) rotate(3deg)}}
+.p-gavel .aR{animation:gv .3s 4 alternate}.p-gavel .head{transform:rotate(-3deg)}
+@keyframes gv{from{transform:rotate(-150deg)}to{transform:rotate(-14deg)}}
+.desk.bump,.bench.bump{animation:bmp .3s}@keyframes bmp{40%{translate:0 -10px}}
+.wit{position:absolute;left:33.33%;bottom:0;width:11%;height:34%;transform:translateX(-50%);z-index:2;background:repeating-linear-gradient(90deg,rgba(0,0,0,.2) 0 2px,transparent 2px 12px),linear-gradient(#5a4430,#24180f);border-top:8px solid #a69670;box-shadow:0 -4px 0 #111}
+.wit::before{content:"SAKSI";position:absolute;top:-30px;left:50%;transform:translateX(-50%);font:400 11px 'Chango',Impact,sans-serif;background:#f3ead0;color:#111;padding:1px 8px;border:2px solid #111;border-radius:6px}
+.nodesk .wit{opacity:0}
+.rpg.tome{--ink:#2a1f12;--card:#ead9a8;--bg:#f1e4bf;--mute:#7a5a30;padding:18px clamp(14px,4vw,30px);box-shadow:0 0 0 5px #3a2410,6px 8px 0 5px rgba(0,0,0,.35);animation:tpg .5s}
+@keyframes tpg{from{transform:perspective(900px) rotateY(-16deg) translateX(14px);opacity:.15}}
+.tome .gd h3{font-family:Georgia,serif;font-style:italic;font-size:21px;color:#3a2410}.tome .gv{border-color:#5b3a1a}
+.tome .pg1{font-size:17px;line-height:1.75;text-align:left}
+.tome .pg1 p:first-child::first-letter{font-size:inherit;float:none;padding:0;color:inherit;font-weight:inherit}
+.sumb{margin-top:12px;border:2px dashed #5b3a1a;border-radius:6px;padding:8px 12px;background:#e8d49e;font-size:15px}.sumb ul{margin:4px 0 0 18px;padding:0}
+.c-w{left:33.33%;bottom:15%;height:64%;transform:translateX(-50%);z-index:1}.nodesk .c-w{opacity:0}
+.pp{cursor:pointer}.p-idle:hover .aR{animation:wv .4s infinite alternate}.p-idle:hover .fR{transform:rotate(-24deg)}@keyframes wv{from{transform:rotate(-125deg)}to{transform:rotate(-155deg)}}
+</style>
+<style>.stage{background:#777}#c3h{position:absolute;inset:0}#c3h canvas{filter:grayscale(1) contrast(1.12) brightness(.9)}.stage::before{content:'';position:absolute;inset:0;z-index:4;pointer-events:none;background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(255,255,255,.07) 46px 90px)}.stage::after{content:'';position:absolute;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.4))}</style>
+</head>
+<body>
+<div class="film"></div>
+<div class="wrap">
+<header><h1>⚖️ Sidang Teks Diskusi</h1><p>Belajar menimbang argumen bersama Hakim Bijak, lalu buktikan di ruang sidang · Bahasa Indonesia Kelas VIII</p></header>
+<nav><button id="tM" onclick="go('m')">📽️ Materi</button><button id="tB" class="off" onclick="go('b')">📖 Bacaan</button><button id="tG" class="off" onclick="go('g')">🔨 Sidang</button><span class="badge" id="bk"></span></nav>
+<main id="m"></main>
+<main id="g" hidden></main><main id="b" hidden></main>
+<p class="hint" style="text-align:center;margin-top:22px">Acuan: Panduan Mata Pelajaran Bahasa Indonesia Fase D (BSKAP, 2025), elemen Membaca dan Memirsa. Data media sosial: APJII 2026.</p>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+let S={done:[],stars:{}};
+try{S=Object.assign(S,JSON.parse(localStorage.getItem('std')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('std',JSON.stringify(S))}catch(e){}};
+const bk=()=>{$('#bk').textContent='📜 Bukti: '+S.done.length+'/'+BABS.length};
+const RAKA=()=>person('n').replace('viewBox="0 0 200 420"','viewBox="34 54 132 118"').replace(/ id="[^"]+"/g,'');
+const NAMES={n:'Raka',h:'Hakim Bijak',g:'Pak Galak',w:'Bu Sari'};
+/* ===== karakter manusia utuh (rig bersendi) ===== */
+function person(k){
+const O='#111',B='#26262e',C={n:['#1f5bff','#e8b923'],g:['#b8372c','#b8372c'],h:['#b8372c','#222'],w:['#8a2be2','#8a2be2']}[k],ac=C[0],sh=C[1],sk={n:'#e2a977',g:'#f0c9a0',h:'#f6dcc0',w:'#d99a6c'}[k];
+const S=w=>`stroke="${O}" stroke-width="${w||4}"`;
+const lim=(d,w,c)=>`<path d="${d}" stroke="${O}" stroke-width="${w+8}" fill="none"/><path d="${d}" stroke="${c}" stroke-width="${w}" fill="none"/>`;
+const back=k=='w'?`<path d="M44 110C40 40 160 40 156 110L162 170Q150 180 138 162L62 162Q50 180 38 170Z" fill="#4a2c1a" ${S()}/>`:'';
+const hair={
+n:`<path d="M52 102C44 44 156 44 148 102C140 78 124 72 100 74C76 72 60 78 52 102Z" fill="#1a1a1a" ${S()}/><path d="M92 56Q88 30 112 38Q104 46 114 56Z" fill="#1a1a1a" ${S(3)}/><circle cx="72" cy="134" r="7" fill="#e4806a" opacity=".5"/><circle cx="128" cy="134" r="7" fill="#e4806a" opacity=".5"/>`,
+g:`<path d="M52 108C44 48 156 48 148 108C132 82 68 82 52 108Z" fill="#111" ${S()}/><path d="M70 64Q100 52 130 64" stroke="#fff" stroke-width="3" fill="none" opacity=".6"/>`,
+h:`<circle cx="42" cy="104" r="15" fill="#fff" ${S()}/><circle cx="158" cy="104" r="15" fill="#fff" ${S()}/><circle cx="40" cy="132" r="13" fill="#fff" ${S()}/><circle cx="160" cy="132" r="13" fill="#fff" ${S()}/><path d="M50 104C42 38 158 38 150 104C130 74 70 74 50 104Z" fill="#fff" ${S()}/>`,
+w:`<path d="M52 98C50 50 150 50 148 98C132 72 104 84 86 66C76 84 62 88 52 98Z" fill="#4a2c1a" ${S()}/><circle cx="72" cy="134" r="7" fill="#e4806a" opacity=".5"/><circle cx="128" cy="134" r="7" fill="#e4806a" opacity=".5"/>`}[k];
+const ear=k=='w'||k=='h'?'':'';
+const earr=k=='w'?`<circle cx="50" cy="132" r="5" fill="#e8b923" ${S(3)}/><circle cx="150" cy="132" r="5" fill="#e8b923" ${S(3)}/>`:'';
+const pre=k=='h'?`<path d="M78 146Q100 194 122 146Q100 158 78 146Z" fill="#fff" ${S()}/>`:'';
+const post=k=='g'?`<g fill="rgba(255,255,255,.3)" ${S()}><circle cx="82" cy="114" r="17"/><circle cx="118" cy="114" r="17"/><path d="M99 112h2" fill="none"/></g>`:'';
+const brows={n:['M68 98Q84 88 98 98','M102 98Q116 88 132 98'],g:['M66 92L98 104','M102 104L134 92'],h:['M66 98Q84 86 98 98','M102 98Q116 86 134 98'],w:['M70 98Q84 90 98 98','M102 98Q116 90 130 98']}[k];
+const suit=(shirt,tie)=>`<path d="M62 164Q100 150 138 164L146 290Q100 302 54 290Z" fill="${B}" ${S()}/><path d="M118 158L138 164L146 290Q130 297 118 293Z" fill="#000" opacity=".25"/><path d="M84 158L100 214L116 158Z" fill="${shirt}" ${S(3)}/>${tie}<path d="M62 164L84 158L100 214M138 164L116 158L100 214" fill="none" ${S(3)}/>`;
+const tie=`<path d="M100 168L92 184L100 240L108 184Z" fill="${ac}" ${S(3)}/>`;
+const torso={n:suit('#fff',tie),g:suit('#fff',tie),w:suit('#8a2be2',`<circle cx="100" cy="192" r="5" fill="#e8b923" ${S(2)}/>`),
+h:`<path d="M54 164Q100 146 146 164L174 374Q100 392 26 374Z" fill="#14141c" ${S()}/><path d="M130 160L146 164L174 374Q152 382 134 378Z" fill="#000" opacity=".3"/><path d="M100 236V382" stroke="#b8372c" stroke-width="7"/><path d="M82 160Q100 154 118 160L108 232Q100 238 92 232Z" fill="#fff" ${S(3)}/>`}[k];
+const legs=k=='h'?'':lim('M82 286V352',20,B)+lim('M118 286V352',20,B)+`<ellipse cx="72" cy="374" rx="34" ry="17" fill="${sh}" ${S()}/><ellipse cx="128" cy="374" rx="34" ry="17" fill="${sh}" ${S()}/><path d="M50 380H94M106 380H150" stroke="#000" stroke-width="3" opacity=".25"/>`;
+const arm=s=>{const L=s=='L',x=L?62:138,ex=L?44:156,fx=L?46:154;const gav=(k=='h'&&!L)?`<path d="M${fx} 300V340" stroke="${O}" stroke-width="10" fill="none"/><path d="M${fx} 300V340" stroke="#8a5a2b" stroke-width="4" fill="none"/><rect x="${fx-17}" y="332" width="34" height="15" rx="4" fill="#e8b923" ${S(3)}/>`:'';
+return `<g class="a${s}" id="${k}-${L?'left':'right'}-arm" style="transform-origin:${x}px 176px">${lim(`M${x} 176L${ex} 240`,18,B)}<g class="f${s}" style="transform-origin:${ex}px 240px">${lim(`M${ex} 240L${fx} 296`,16,B)}<path class="fing" d="M${fx} 306l0 24" stroke="${O}" stroke-width="9" fill="none"/>${gav}<circle cx="${fx}" cy="298" r="13" fill="#fff" ${S()}/><path d="M${fx+(L?8:-8)} 292q${L?6:-6} 2 ${L?4:-4} 10" fill="none" stroke="${O}" stroke-width="2.5"/></g></g>`};
+const mc=k=='g'?'M80 140Q102 160 124 134':'M78 136Q100 162 122 136';
+return `<svg viewBox="0 0 200 420" class="pp p-idle" id="c-${k}" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="100" cy="394" rx="76" ry="9" fill="rgba(0,0,0,.25)"/><g class="bod" id="${k}-body">${legs}${torso}</g>${arm('L')}${arm('R')}<g class="head" id="${k}-head">${back}<ellipse cx="50" cy="116" rx="9" ry="12" fill="${sk}" ${S()}/><ellipse cx="150" cy="116" rx="9" ry="12" fill="${sk}" ${S()}/>${earr}<ellipse cx="100" cy="112" rx="50" ry="48" fill="${sk}" ${S()}/><path d="M54 126Q100 176 146 126Q148 152 100 160Q52 152 54 126Z" fill="#000" opacity=".2"/>${pre}${hair}<g class="eyes" id="${k}-eyes"><ellipse cx="82" cy="114" rx="12" ry="15" fill="#fff" ${S()}/><ellipse cx="118" cy="114" rx="12" ry="15" fill="#fff" ${S()}/><circle cx="85" cy="117" r="7" fill="${O}"/><circle cx="121" cy="117" r="7" fill="${O}"/><circle cx="88" cy="113" r="2.3" fill="#fff"/><circle cx="124" cy="113" r="2.3" fill="#fff"/></g>${post}<g class="brw" stroke="${O}" stroke-width="6" fill="none"><path class="bl" d="${brows[0]}"/><path class="br" d="${brows[1]}"/></g><path d="M100 121q-7 11 3 14" ${S(3)} fill="none"/><path class="mc" d="${mc}" ${S()} fill="#fff"/><ellipse class="mo" cx="100" cy="142" rx="13" ry="11" fill="#7a2a24" ${S(3)}/><path class="swt" d="M152 70q9 16 0 22q-9-6 0-22z" fill="#bfe8ff" ${S(3)}/></g></svg>`}
+const BG='<div class="wall"></div><div class="cols"></div><div class="win" style="left:20.8%"></div><div class="win" style="left:50%"></div><div class="win" style="left:79.2%"></div><div class="seal" style="left:50%">⚖</div><div class="floor"></div>';
+function stage(desk){return `<div class="stage ${desk?'':'nodesk'}"><div class="shaker" id="shk"><div class="cam" id="cam"><div class="layer bg">${BG}</div><div class="layer mid"><div class="ch c-n">${person('n')}</div><div class="ch c-h">${person('h')}</div><div class="ch c-w">${person('w')}</div><div class="bench"></div><div class="wit"></div><div class="ch c-g">${person('g')}</div></div><div class="layer fg"><div class="desk dl"></div><div class="desk dr"></div></div></div></div><div class="fl" id="fl"></div><div class="st" id="st"></div></div><div class="tb" id="tb" onclick="adv()"><span class="nm" id="nm"></span><span id="tx"></span><span class="ar">▼</span></div>`}
+/* ===== kamera, pose, efek ===== */
+const SH={p:[0,1.04,'36%','-16deg'],h:[1,1.04,'36%','0deg'],l:[2,1.04,'36%','16deg'],P:[0,1.45,'36%','-16deg'],H:[1,1.45,'36%','0deg'],L:[2,1.45,'36%','16deg'],W:[.5,1.45,'36%','0deg']};
+const slamFx=()=>{flash();shake();document.querySelectorAll('.desk').forEach(d=>{d.classList.remove('bump');void d.offsetWidth;d.classList.add('bump')})};
+const gavFx=()=>{shake();[0,350].forEach(t=>setTimeout(()=>{const b=document.querySelector('.bench');if(b){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump')}},t))};
+function cut(s){const c=$('#cam');if(!c)return;const [i,z,oy,ry]=SH[s];c.style.setProperty('--i',i);c.style.setProperty('--z',z);c.style.setProperty('--ry',ry);c.style.transformOrigin='50% '+oy}
+function P(k,po,fa){const e=$('#c-'+k);if(!e)return;const say=e.classList.contains('say');e.setAttribute('class','pp p-'+(po||'idle')+(fa?' f-'+fa:'')+(say?' say':''))}
+function talk(k,on){const e=$('#c-'+k);e&&e.classList.toggle('say',on)}
+function resetP(){['n','h','g','w'].forEach(k=>P(k,'idle'))}
+function pulse(id,cls,ms){const e=$(id);if(!e)return;e.classList.remove(cls);void e.offsetWidth;e.classList.add(cls);setTimeout(()=>e.classList.remove(cls),ms)}
+const stamp=t=>{const s=$('#st');if(!s)return;s.textContent=t;s.className='st';void s.offsetWidth;s.className='st on';setTimeout(()=>s.className='st',1100)};
+const flash=()=>pulse('#fl','on',420),shake=()=>pulse('#shk','sk',520);
+/* ===== kotak dialog ===== */
+let T={iv:0,full:'',busy:false,cb:null,who:'',next:null};
+function type(w,text,cb){clearInterval(T.iv);const el=$('#tx');if(!el)return;$('#nm').textContent=NAMES[w]||'';T.full=text;T.busy=true;T.cb=cb;T.who=w;T.next=null;$('#tb').classList.remove('rdy');talk(w,true);let k=0;T.iv=setInterval(()=>{const e=$('#tx');if(!e){clearInterval(T.iv);return}e.textContent=text.slice(0,++k);if(k>=text.length)endType()},24)}
+function endType(){clearInterval(T.iv);const e=$('#tx');if(e)e.textContent=T.full;T.busy=false;talk(T.who,false);T.cb&&T.cb();const t=$('#tb');t&&t.classList.toggle('rdy',!!T.next)}
+function adv(){if(T.busy){endType();return}if(T.next){const f=T.next;T.next=null;$('#tb').classList.remove('rdy');f()}}
+function runLines(L,i,end){if(i>=L.length){end();return}const [w,t,s,po,fa]=L[i];cut(s);resetP();P(w,po||'talk',fa);type(w,t,()=>{P(w,(!po||po=='talk')?'idle':po,fa);T.next=()=>runLines(L,i+1,end)})}
+/* ===== MATERI ===== */
+const BABS=[
+{n:'Dua Sisi',title:'Bab 1 · Menimbang Dua Sisi',a:{t:'sort',w:1,cats:['PRO (setuju)','KONTRA (tidak setuju)'],items:[
+['Ponsel membantu siswa mencari sumber belajar dengan cepat.',0,'Ini alasan yang mendukung ponsel, jadi masuk PRO.'],
+['Notifikasi membuat siswa sulit fokus saat pelajaran.',1,'Ini alasan yang menentang ponsel, jadi masuk KONTRA.'],
+['Ponsel dapat dipakai menghubungi orang tua saat keadaan darurat.',0,'Manfaat ponsel, jadi PRO.'],
+['Sebagian siswa bermain game saat jam belajar.',1,'Dampak buruk ponsel, jadi KONTRA.']]},
+sum:['Teks diskusi menimbang dua sisi (pro dan kontra) dari satu isu.','Urutannya: isu, pro, kontra, lalu simpulan.','Tujuannya agar kita bersikap berdasarkan alasan dan bukti, bukan ikut-ikutan.']},
+{n:'Struktur',title:'Bab 2 · Empat Bagian Teks',a:{t:'sort',cats:['ISU','PRO','KONTRA','SIMPULAN'],items:[
+['Haruskah siswa SMP boleh membawa ponsel ke sekolah?',0,'Pertanyaan pembuka yang diperdebatkan adalah ISU.'],
+['Pihak yang setuju menyatakan ponsel mempermudah belajar karena informasi bisa dicari kapan saja.',1,'“Pihak yang setuju” adalah penanda PRO.'],
+['Namun, pihak yang tidak setuju menilai ponsel membuat siswa sulit fokus.',2,'“Namun, pihak yang tidak setuju” adalah penanda KONTRA.'],
+['Dengan demikian, ponsel boleh dibawa asalkan penggunaannya diatur.',3,'“Dengan demikian” menandai SIMPULAN.']]},
+sum:['ISU: masalah yang diperdebatkan, sering berupa pertanyaan.','PRO dan KONTRA: dua sisi yang ditimbang beserta alasan dan bukti.','SIMPULAN: sikap penulis setelah menimbang, ditandai “dengan demikian” atau “jadi”.']},
+{n:'Bahasa',title:'Bab 3 · Jembatan Pertentangan',a:{t:'hl',text:'Media sosial memudahkan remaja belajar. Namun, waktu belajar bisa tersita. Remaja tidak selalu rugi, tetapi mereka perlu batas waktu. Meskipun begitu, sebagian orang tua tetap khawatir. Sebaliknya, ada remaja yang justru makin produktif.',tg:['namun','tetapi','meskipun','sebaliknya']},
+sum:['Konjungsi pertentangan: namun, tetapi, akan tetapi, meskipun, sebaliknya.','Konjungsi menyambungkan dua gagasan yang berlawanan.','Sanggahan ditulis santun dan baku, menyerang argumen bukan orangnya.']},
+{n:'Fakta',title:'Bab 4 · Fakta atau Opini?',a:{t:'sort',cats:['FAKTA','OPINI'],items:[
+['Sebanyak 31,8% responden paling sering mengakses TikTok (APJII, 2026).',0,'Ada angka, sumber, dan tahun yang bisa dicek: FAKTA.'],
+['Media sosial seharusnya dilarang untuk remaja.',1,'Kata “seharusnya” menandai pandangan pribadi: OPINI.'],
+['Penetrasi internet Indonesia mencapai 81,72% (APJII, 2026).',0,'Angka dengan sumber dan tahun: FAKTA.'],
+['Video pendek adalah hiburan terbaik.',1,'“Terbaik” tidak punya ukuran yang bisa dicek: OPINI.']]},
+sum:['Fakta: bisa dicek, biasanya ada angka, sumber, dan tahun.','Opini: pandangan pribadi yang bisa diperdebatkan.','Argumen yang baik memakai fakta sebagai penopang.']},
+{n:'3 Uji',title:'Bab 5 · Detektor Argumen',a:{t:'sort',cats:['KUAT','CUKUP KUAT','LEMAH'],items:[
+['Ponsel harus dilarang karena temanku nilainya turun.',2,'Hanya satu pengalaman dan tanpa data: LEMAH.'],
+['Notifikasi memecah fokus, dan penelitian pada banyak siswa menemukan hasil serupa.',0,'Ada alasan, data yang bisa dicek, dan berlaku luas: KUAT.'],
+['Media sosial buruk karena semua orang bilang begitu.',2,'Tidak ada alasan jelas dan tidak ada data: LEMAH.'],
+['Ponsel membantu belajar karena siswa bisa membuka kamus daring.',1,'Ada alasan dan contoh, tetapi belum ada data luas: CUKUP KUAT.']]},
+sum:['Tiga uji: alasan, dapat dicek, berlaku umum.','Tiga lolos = kuat, dua = cukup kuat, nol atau satu = lemah.','Satu pengalaman pribadi belum cukup menjadi bukti.']},
+{n:'Bukti',title:'Bab 6 · Periksa Bukti',a:{t:'sort',cats:['COCOK','TIDAK COCOK'],items:[
+['Klaim: “Sebagian besar responden mengakses media sosial 1–3 jam per hari.” Data: 82,8% berada di 1–3 jam (APJII, 2026).',0,'Klaim sejalan dengan angka: COCOK.'],
+['Klaim: “Rata-rata remaja main media sosial 10 jam sehari.” Data: 82,8% berada di 1–3 jam.',1,'Angka 10 jam jauh dari data: TIDAK COCOK.'],
+['Klaim: “TikTok paling sering diakses.” Data: TikTok 31,8%, posisi teratas (APJII, 2026).',0,'Klaim sejalan dengan data: COCOK.'],
+['Klaim: “Semua orang mengakses media sosial lebih dari 6 jam.” Data: 82,8% berada di 1–3 jam.',1,'Data justru menunjukkan sebaliknya: TIDAK COCOK.']]},
+sum:['Periksa sumber, tahun, jumlah responden, dan kecocokan data dengan klaim.','Klaim yang tidak cocok dengan datanya patut diragukan.','Ingat batas data: tidak semua data khusus untuk remaja.']},
+{n:'Jebakan',title:'Bab 7 · Tangkap Jebakan',a:{t:'sort',cats:['Serangan pribadi','Ikut-ikutan','Menakut-nakuti','Hitam-putih'],items:[
+['Usulanmu pasti salah, kamu kan nilainya jelek.',0,'Yang diserang orangnya, bukan argumennya.'],
+['Semua sekolah sudah melarang, jadi kita juga harus.',1,'Banyak yang melakukan belum berarti benar.'],
+['Kalau ponsel tidak dilarang, sekolah ini akan hancur!',2,'Tanpa bukti, hanya menakut-nakuti.'],
+['Pilih saja: larang total atau bebas total!',3,'Dua pilihan ekstrem padahal ada jalan tengah.']]},
+sum:['Serangan pribadi: menyerang orangnya, bukan argumen.','Ikut-ikutan: “semua orang melakukannya” bukan bukti.','Menakut-nakuti: tanpa bukti, hanya rasa takut.','Hitam-putih: hanya dua pilihan ekstrem padahal ada jalan tengah.']}
+];
+let cur=0;
+function bab(i){cur=i;clearInterval(T.iv);T.next=null;const B=BABS[i];
+$('#m').innerHTML=`<div class="map"><b>🗺️ Peta Jalan (rujukan: modul ajar)</b><br><span><b>TP 1 (Pertemuan 1)</b>: menganalisis isu, struktur, dan kata penanda, lalu menilai kekuatan argumen dengan tiga pertanyaan uji. Bab 1 sampai 5.</span><br><span><b>TP 2 (Pertemuan 2)</b>: mengevaluasi kredibilitas bukti dengan data infografik, lalu menyatakan pendapat pro atau kontra yang beralasan, baku, dan santun. Bab 6 dan 8.</span><br><span>Bab 7 memperkuat TP 1 dan TP 2.</span><br><span>Aplikasi ini dipakai untuk pra-belajar dan pengulangan; kegiatan kelas mengikuti modul. Tautan podcast ada di Bab 1 dan Bab 5 (opsional), tautan infografik di Bab 6.</span><br><small>Modul ajar menjadi peta jalan. Isi materi dikembangkan agar kontekstual, dengan rujukan Panduan Mata Pelajaran Bahasa Indonesia Fase D (BSKAP, 2025) dan dilengkapi dari modul ajar.</small></div><div class="reel">${BABS.map((x,j)=>`<button class="${j==i?'on':''}" onclick="bab(${j})"><b>${j+1}</b><small>${x.n}${S.done.includes(j)?' ✔':''}</small></button>`).join('')}</div><h2 class="ttl" style="font-size:21px;margin:2px 0 6px">${B.title}</h2><div class="tpl">🎯 ${RD[i].tp}</div><div id="rd"></div><div id="act"></div>`;bk();read(i,0)}
+function skip(i){clearInterval(T.iv);T.next=null;T.busy=false;resetP();cut('P');openAct(i)}
+function openAct(i){const A=BABS[i].a;A.k=0;A.ok=0;A.tilt=0;if(A.t=='hl')hl(i);else sortItem(i)}
+const scl=A=>`<svg viewBox="0 0 200 80" class="scl"><path d="M100 14v58M76 74h48" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><g id="beam" style="transform-origin:100px 14px;transform:rotate(${A.tilt*9}deg)"><path d="M26 14h148" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M26 14l-14 28h28zM174 14l-14 28h28z" fill="none" stroke="currentColor" stroke-width="3"/><text x="26" y="58" font-size="11" text-anchor="middle" fill="currentColor">PRO</text><text x="174" y="58" font-size="11" text-anchor="middle" fill="currentColor">KONTRA</text></g></svg>`;
+function sortItem(i){const A=BABS[i].a,it=A.items[A.k];
+$('#act').innerHTML=`<div class="card0">${A.w?scl(A):''}<div class="hint">Tantangan ${A.k+1} dari ${A.items.length}</div><div class="item">${it[0]}</div><div class="opts">${A.cats.map((c,j)=>`<button class="opt" onclick="sortAns(${i},${j},this)">${c}</button>`).join('')}</div><div id="fbk"></div></div>`}
+function sortAns(i,j,el){const A=BABS[i].a,it=A.items[A.k],ok=j==it[1];
+document.querySelectorAll('#act .opt').forEach((b,k)=>{b.disabled=true;if(k==it[1])b.classList.add('good')});if(!ok)el.classList.add('bad');
+if(A.w){A.tilt+=it[1]==0?-1:1;const bm=$('#beam');if(bm)bm.style.transform=`rotate(${A.tilt*9}deg)`}
+resetP();cut('P');if(ok){A.ok++;stamp('BENAR!');P('n','point','h');P('h','nod','h')}else{stamp('KEBERATAN!');shake();P('n','sweat','s');P('h','think')}
+type('h',ok?'Tepat sekali!':'Hmm, belum tepat. Perhatikan penjelasannya.',()=>{});
+const last=A.k==A.items.length-1;
+$('#fbk').innerHTML=`<p class="fb">${ok?'✔':'✖'} ${it[2]}</p><button class="btn" onclick="${last?`fin(${i})`:`nxt(${i})`}">${last?'Lihat Hasil ▶':'Lanjut ▶'}</button>`}
+function nxt(i){BABS[i].a.k++;resetP();sortItem(i)}
+function hl(i){const A=BABS[i].a;A.f=0;A.x=0;cut('P');
+$('#act').innerHTML=`<div class="card0"><div class="hint">Ketuk konjungsi pertentangan di paragraf. Ditemukan: <b id="hf">0</b>/${A.tg.length} · Salah ketuk: <b id="hx">0</b></div><p class="item" style="font-weight:normal">${A.text.split(/(\s+)/).map(w=>(!w||/\s/.test(w))?w:`<span class="word" onclick="hlTap(${i},this)">${w}</span>`).join('')}</p></div>`}
+function hlTap(i,el){const A=BABS[i].a;if(el.classList.contains('hit'))return;const w=el.textContent.replace(/[^\p{L}]/gu,'').toLowerCase();
+if(A.tg.includes(w)){el.classList.add('hit');A.f++;$('#hf').textContent=A.f;stamp('DITEMUKAN!');P('n','point','h');setTimeout(()=>P('n','idle'),900);if(A.f==A.tg.length)setTimeout(()=>fin(i),1000)}
+else{el.classList.add('no');A.x++;$('#hx').textContent=A.x;P('n','sweat','s');setTimeout(()=>{el.classList.remove('no');P('n','idle')},600)}}
+function fin(i){const B=BABS[i],A=B.a,ok=A.t=='hl'||A.ok>=Math.ceil(A.items.length*.7);
+if(ok&&!S.done.includes(i)){S.done.push(i);save();bk()}
+$('#act').innerHTML=`<div class="card0"><h3 style="font-size:20px">${ok?'Bab selesai! +1 Bukti 📜':'Hampir! Coba ulangi.'}</h3>${A.t=='sort'?`<p>Skor: ${A.ok}/${A.items.length}</p>`:''}<b>Catatan berkas:</b><ul>${B.sum.map(s=>`<li>${s}</li>`).join('')}</ul><div class="nv"><button class="btn" onclick="bab(${i})">Ulangi 🔁</button>${i<BABS.length-1?`<button class="btn" onclick="bab(${i+1})">Bab ${i+2} ▶</button>`:`<button class="btn" onclick="go('g')">Ke Sidang 🔨</button>`}</div></div>`;
+resetP();cut('H');P('h',ok?'cheer':'talk');P('n',ok?'cheer':'idle','h');type('h',ok?'Bagus! Kamu siap naik ke bab berikutnya.':'Pelajari catatan, lalu ulangi tantangannya.',()=>{})}
+function go(t){clearInterval(T.iv);T.next=null;document.body.classList.toggle('sd',t=='g');['m','g','b'].forEach(x=>{$('#'+x).hidden=t!=x;$('#t'+x.toUpperCase()).className=t==x?'':'off';if(t!=x)$('#'+x).innerHTML=''});
+if(t=='g')menu();else if(t=='b')book();else bab(cur);window.scrollTo(0,0)}
+const PL=['Isu','Isu','Pro','Pro','Pro ⚠','Kontra','Kontra','Kontra','Simpulan'],PT=['Media sosial sudah menjadi bagian dari keseharian remaja. Sebelum berangkat sekolah, saat istirahat, sampai menjelang tidur, remaja sering menghabiskan waktu di depan layar ponsel. Platform seperti TikTok dan Instagram dipakai untuk mencari hiburan, berbagi momen, hingga belajar.','Kebiasaan ini memunculkan perbedaan pendapat. Sebagian orang menilai media sosial memberi banyak manfaat bagi remaja, sedangkan sebagian lain menganggapnya lebih banyak membawa risiko. Apakah media sosial lebih tepat disebut sahabat atau justru jebakan bagi remaja?','Pihak yang setuju berpendapat bahwa media sosial memberi ruang bagi remaja untuk berkreasi. Karya yang dulu hanya dilihat keluarga kini bisa dinikmati banyak orang dan mendapat masukan. Contohnya, remaja yang suka melukis dapat membagikan proses melukisnya lewat video singkat dan bertemu dengan orang-orang yang punya minat sama.','Selain itu, media sosial menjadi sumber belajar yang mudah dijangkau. Banyak akun membagikan penjelasan materi pelajaran, latihan bahasa asing, sampai tips menulis secara gratis. Remaja yang belum bisa ikut bimbingan belajar tetap dapat belajar dari video-video singkat itu.','Ada pula yang berpendapat bahwa remaja yang aktif di media sosial pasti lebih pintar bergaul dan lebih sukses di masa depan. Menurut mereka, semakin sering seseorang mengunggah sesuatu, semakin besar peluangnya berhasil.','Namun, pihak yang tidak setuju menilai media sosial mudah membuat penggunanya kehilangan waktu. Fitur gulir tanpa akhir dan rekomendasi video yang terus muncul membuat pengguna sulit berhenti. Akibatnya, tugas sekolah tertunda dan waktu tidur berkurang, padahal awalnya hanya berniat membuka aplikasi sebentar.','Selain itu, media sosial membuka peluang terjadinya perundungan siber, yaitu perundungan lewat internet. Komentar kasar bisa dikirim oleh siapa saja tanpa bertatap muka, dan pelakunya sering merasa tidak perlu bertanggung jawab. Platform memang menyediakan fitur blokir dan laporkan, tetapi korban sering baru memakainya setelah merasa malu dan takut membuka akunnya lagi.','Kekhawatiran lainnya adalah informasi yang tidak selalu benar. Kabar bohong bisa menyebar cepat karena banyak orang membagikannya sebelum memeriksa sumbernya. Meskipun tampak meyakinkan, tidak semua kabar yang beredar itu benar. Remaja yang belum terbiasa mengecek kebenaran informasi lebih mudah percaya.','Berdasarkan kedua pandangan tersebut, media sosial bisa menjadi sahabat sekaligus jebakan, tergantung pada cara remaja memakainya. Karena itu, remaja perlu membatasi waktu penggunaan, memeriksa kebenaran informasi sebelum membagikannya, dan memakai fitur blokir serta laporkan agar manfaat media sosial tetap terasa tanpa mengabaikan risikonya.'];let showL=false;
+function book(){$('#b').innerHTML=`<div style="text-align:center;margin-bottom:12px"><button class="btn" onclick="showL=!showL;book()">${showL?'Sembunyikan':'Tampilkan'} label struktur</button></div><article class="tome"><div class="rh">Teks Diskusi · Kelas VIII</div><h2>Media Sosial bagi Remaja: Sahabat atau Jebakan?</h2><div class="orn">❦ ❦ ❦</div><div class="pages">${PT.map((p,i)=>`<p class="${PL[i].split(' ')[0].toLowerCase()}">${showL?`<span class="lb">${PL[i]}</span>`:''}<sup>${i+1}</sup>${p}</p>`).join('')}</div><div class="orn">❦</div><div class="ft">Teks ditulis sendiri oleh penyusun untuk keperluan pembelajaran ini.</div></article>`}
+const RD=[
+{tp:"TP 1: mengenali isu serta pendapat pro dan kontra",r:[
+{h:"Mulai dari grup kelas",b:[["p","Di grup kelas ada yang bilang, “Boleh dong bawa ponsel ke sekolah!” Ada juga yang bilang, “Jangan, mengganggu belajar.” Siapa yang benar?"],["rv","Kalau hanya mendengar satu pihak, apakah keputusanmu adil?","Belum. Kita perlu mendengar dua sisi dulu, baru memutuskan."],["p","<b>Teks diskusi</b> membahas satu isu dari dua sisi: pihak yang setuju (<b>pro</b>) dan yang tidak setuju (<b>kontra</b>), lalu ditutup <b>simpulan</b>. Penulis belum memihak."],["n","Teks diskusi bisa lisan (diskusi kelas, podcast) maupun tulis (rubrik opini)."]]},
+{h:"Lima ciri teks diskusi",b:[["p","Ketuk kartu untuk membuka."],["cards",[["1 · Isu","Membahas hal yang diperdebatkan dan belum disepakati."],["2 · Seimbang","Pro dan kontra mendapat ruang sama besar."],["3 · Beralasan","Setiap pendapat disertai alasan, contoh, atau data."],["4 · Baku dan santun","Yang disanggah gagasannya, bukan orangnya."],["5 · Bersimpulan","Simpulan berasal dari argumen yang sudah dibahas, bukan gagasan baru."]]]]},
+{h:"Layakkah jadi isu?",b:[["p","Isu yang baik aktual, dekat dengan keseharian, dan bisa dibela dua sisi. Biasanya berbentuk pertanyaan: Apakah…? Perlukah…? Bolehkah…?"],["mc","Mana yang termasuk isu?",["Air mendidih pada 100°C","Perlukah remaja dibatasi memakai media sosial?","Indonesia merdeka tahun 1945"],1,"Hanya pertanyaan kedua yang bisa dibela dua sisi. Dua lainnya fakta pasti."],["mc","Teks yang memihak satu pendapat dan ingin meyakinkan pembaca disebut…",["Teks diskusi","Teks argumentasi","Teks eksposisi"],1,"Teks diskusi menimbang dua sisi, sedangkan teks argumentasi memihak."]]}]},
+{tp:"TP 1: menganalisis struktur teks dan kata penandanya",r:[
+{h:"Empat bagian berurutan",b:[["p","Setiap teks diskusi tersusun <b>Isu → Pro → Kontra → Simpulan</b>. Ketuk kartu untuk melihat fungsi dan penandanya."],["cards",[["Isu","Pokok masalah, sering berupa pertanyaan. Penanda: “Belakangan ini…”, “Muncul perbedaan pendapat…”."],["Argumen pro","Alasan pihak setuju plus bukti. Penanda: “Pihak yang setuju berpendapat…”, “Selain itu…”."],["Argumen kontra","Alasan pihak menolak plus bukti. Penanda: “Namun…”, “Sebaliknya…”."],["Simpulan","Merangkum dua sisi lalu memberi sikap. Penanda: “Berdasarkan…”, “Dengan demikian…”."]]],["n","Pro dan kontra boleh bertukar posisi asal ruangnya seimbang. Isu dan simpulan tidak boleh tertukar."]]},
+{h:"Cari penandanya di teks A.2",b:[["p","Ketuk tiap kutipan dari teks “Media Sosial bagi Remaja: Sahabat atau Jebakan?” untuk melihat bagiannya. Teks utuh ada di tab 📖 Bacaan."],["tap",[["“Apakah media sosial lebih tepat disebut sahabat atau justru jebakan…?”","ISU"],["“Pihak yang setuju berpendapat…”","PRO"],["“Namun, pihak yang tidak setuju menilai…”","KONTRA"],["“Berdasarkan kedua pandangan tersebut…”","SIMPULAN"]]],["n","“Namun” menandai peralihan ke pihak berlawanan, bukan simpulan."]]},
+{h:"Cara menyusun tiap bagian",b:[["cards",[["Isu","Latar belakang, pernyataan bahwa orang berbeda pendapat, lalu pertanyaan pokok."],["Argumen","Satu paragraf satu argumen: pendapat, alasan, lalu bukti. Siapkan dua atau tiga argumen per sisi."],["Simpulan","Rangkum kedua sisi lalu beri sikap, misalnya “boleh dengan syarat”. Jangan menambah alasan baru."]]],["mc","Paragraf simpulan memuat alasan baru yang belum dibahas. Apa masalahnya?",["Tidak ada masalah","Simpulan hanya boleh merangkum dua sisi","Simpulan harus lebih panjang"],1,"Simpulan berasal dari argumen yang sudah dibahas."]]}]},
+{tp:"TP 1: mengenali kata penanda (konjungsi) dan bahasa santun",r:[
+{h:"Jembatan dari pro ke kontra",b:[["p","Peralihan antarsisi memakai <b>konjungsi pertentangan</b>."],["tbl",["Konjungsi","Cara pakai","Contoh"],[["namun","Awal kalimat, diikuti koma","Namun, pihak yang tidak setuju menilai…"],["tetapi","Dalam kalimat, didahului koma","Media sosial memudahkan belajar, tetapi sering membuat lupa waktu."],["akan tetapi","Lebih resmi","Akan tetapi, tidak semua informasi dapat dipercaya."],["meskipun","Mengakui lalu berlawanan","Meskipun bermanfaat, media sosial perlu dibatasi."],["sebaliknya","Kebalikan kalimat sebelumnya","Sebaliknya, pihak yang menolak melihat risiko lebih besar."]]],["mc","Pilih konjungsi: “Ponsel membantu belajar, ___ sering membuat lupa waktu.”",["dan","tetapi","sehingga"],1,"“Dan” hanya menambah. “Tetapi” menghubungkan dua hal yang berlawanan."]]},
+{h:"Baku dan santun",b:[["p","Sanggahlah gagasannya, bukan orangnya. Ketuk kartu untuk melihat perbaikannya."],["cards",[["“Itu cuma alasan orang malas.”","Lebih santun: “Alasan itu perlu dipertimbangkan, tetapi belum didukung bukti yang cukup.”"],["“Kalian semua keliru.”","Lebih santun: “Kami memiliki pandangan yang berbeda karena …”"],["Kata baku","sosmed → media sosial · banget → sekali · resiko → risiko · aktifitas → aktivitas · sekedar → sekadar · merubah → mengubah · praktek → praktik · ijin → izin · silahkan → silakan"]]],["n","Tulis koma setelah konjungsi di awal kalimat: “Namun, …”."]]}]},
+{tp:"TP 1: membedakan fakta dari opini sebelum menilai argumen",r:[
+{h:"Fakta dan opini",b:[["cards",[["Fakta","Dapat dibuktikan. Ciri: ada angka, tanggal, nama, atau tempat yang bisa diperiksa. Contoh: survei APJII 2026 melibatkan 8.700 responden."],["Opini","Penilaian pribadi. Ciri: “menurut saya”, “sebaiknya”, dan kata menilai seperti bagus, buruk, berbahaya, terbaik."]]],["n","Opini tidak selalu buruk. Dalam teks diskusi opini perlu, asal ditopang fakta atau alasan yang jelas."]]},
+{h:"Uji sendiri",b:[["mc","“Penetrasi internet Indonesia mencapai 81,72% (APJII, 2026).”",["Fakta","Opini"],0,"Ada angka, sumber, dan tahun yang bisa dicek."],["mc","“Video pendek adalah hiburan terbaik.”",["Fakta","Opini"],1,"“Terbaik” tidak punya ukuran yang bisa dicek."],["mc","“Media sosial seharusnya dibatasi bagi remaja.”",["Fakta","Opini"],1,"“Seharusnya” menandai pandangan pribadi. Opini ini kuat bila ditopang data."]]}]},
+{tp:"TP 1: menilai kekuatan argumen dengan tiga pertanyaan uji",r:[
+{h:"Tiga pertanyaan uji",b:[["p","Ajukan tiga pertanyaan pada setiap pendapat: <b>(1)</b> Apa alasannya? <b>(2)</b> Adakah contoh atau data yang bisa dicek? <b>(3)</b> Berlaku untuk banyak orang atau hanya satu pengalaman?"],["cards",[["Kuat","Alasan jelas, bukti bisa dicek, tidak menyamaratakan (tiga ya)."],["Cukup kuat","Ada alasan dan contoh, tetapi bukti belum lengkap atau belum bisa dicek (dua ya)."],["Lemah","Tanpa alasan atau bukti, menyamaratakan, atau tidak berkaitan dengan isu (satu atau nol ya)."]]],["rv","Paragraf 5 teks A.2 berkata remaja yang aktif di media sosial “pasti” lebih sukses. Kuat atau lemah?","Lemah. Tidak ada alasan selain “pasti”, tidak ada data yang bisa dicek, dan tidak berlaku untuk semua remaja."]]},
+{h:"Jenis bukti",b:[["cards",[["Data atau angka","44,9% responden mengakses media sosial 1–2 jam per hari. Periksa sumbernya."],["Contoh kejadian","Remaja pelukis membagikan karya lewat video singkat. Pastikan nyata."],["Pendapat ahli","Sebut siapa dan keahliannya."],["Pengalaman langsung","Belum tentu berlaku untuk semua orang."],["Sebab akibat","Notifikasi terus muncul, sehingga perhatian terpecah. Hubungannya harus masuk akal."]]],["n","Waspadai kata “semua”, “pasti”, “selalu”, “tidak pernah”, dan “pokoknya”."]]}]},
+{tp:"TP 2: membandingkan klaim dengan data dan menilai kredibilitas bukti",r:[
+{h:"Empat cek bukti",b:[["p","Angka belum tentu benar atau cocok. Periksa empat hal."],["cards",[["Sumber","Dari lembaga mana? Contoh: APJII, disajikan GoodStats Data."],["Tahun","Seberapa baru? Survei ini 1 Februari sampai 15 Maret 2026."],["Jumlah responden","8.700 orang di 38 provinsi, minimal berusia 13 tahun."],["Cocok dengan klaim?","Data benar belum tentu cocok. Durasi bukan dampak, dan data ini tidak khusus remaja."]]]]},
+{h:"Baca infografik APJII 2026",b:[["p","Langkahnya: judul dan tahun → sumber dan responden → angka terbesar dan terkecil → makna tersirat → apa yang <b>tidak</b> ditunjukkan data."],["bars",[["Kurang dari 1 jam",7.9,"7,9% responden mengakses kurang dari 1 jam per hari."],["1–2 jam",44.9,"Angka terbesar: 44,9% responden."],["2–3 jam",37.9,"Digabung dengan 1–2 jam jadi 82,8%. Tersirat: sebagian besar 1 sampai 3 jam per hari."],["3–4 jam",6.9,"6,9% responden."],["Lebih dari 4 jam",2.4,"Angka terkecil: 2,4% responden."]]]]},
+{h:"Cocokkan klaim dengan data",b:[["mc","Klaim: “Sebagian besar remaja menghabiskan lebih dari 4 jam sehari di media sosial.”",["Didukung data","Tidak didukung data","Belum bisa dinilai"],1,"Hanya 2,4% responden mengakses lebih dari 4 jam, dan data tidak khusus remaja."],["mc","Klaim: “Media sosial membuat tugas sekolah tertunda.”",["Didukung data","Tidak didukung data","Belum cukup didukung"],2,"Data hanya mengukur durasi, bukan dampaknya pada tugas sekolah."]]}]},
+{tp:"TP 1: mengenali argumen lemah (salah nalar)",r:[
+{h:"Lima argumen lemah",b:[["cards",[["Menyamaratakan","“Semua remaja kecanduan ponsel.” Perbaiki: “Sebagian remaja sulit lepas dari ponsel.”"],["Menyerang pribadi","Menilai orangnya, bukan isinya. Nilailah alasan yang dikemukakan."],["Ikut-ikutan","“Banyak yang memakainya” bukan bukti. Sebut manfaat nyata."],["Tanpa alasan","“Pokoknya dilarang.” Tambahkan alasan dan contoh."],["Alasan tak berkaitan","“Ponsel dilarang karena cuaca panas.” Pakai alasan yang langsung terkait isu."]]],["mc","“Semua sekolah sudah melarang, jadi kita juga harus.”",["Ikut-ikutan","Menyerang pribadi","Menyamaratakan"],0,"Banyak yang melakukan belum berarti benar."]]}]},
+{tp:"TP 2: menyatakan pendapat pro atau kontra beserta alasan dan bukti",r:[
+{h:"Rumus tanggapan",b:[["p","Tanggapan tertulis singkat berisi <b>sikap</b>, <b>satu alasan</b>, dan <b>satu bukti</b> (3 sampai 5 kalimat), dengan bahasa baku dan santun."],["tbl",["Bagian","Kalimat pembuka"],[["Sikap","Saya pro / kontra karena …"],["Bukti","Buktinya, … (dari teks atau infografik)"],["Catatan","Meskipun demikian, … (batas data)"]]],["n","Bukti harus dapat dicek dan cocok dengan alasanmu."]]},
+{h:"Susun tanggapanmu",b:[["build"]]}]}];
+BABS.push({n:'Tanggapan',title:'Bab 8 · Tanggapan Tertulis',lines:[],a:{t:'sort',cats:['Baku dan santun','Tidak baku','Tidak santun'],items:[['Saya kurang sependapat karena belum ada data yang mendukung klaim itu.',0,'Baku, santun, dan beralasan.'],['Media sosial itu gak ada gunanya, banget deh.',1,'“gak” dan “banget” tidak baku.'],['Pendapatmu aneh, kamu kan jarang belajar.',2,'Menyerang orangnya: tidak santun.'],['Saya memahami pendapatmu, tetapi media sosial masih bermanfaat karena menjadi sumber belajar.',0,'Baku, santun, dan beralasan.'],['Silahkan baca, ini ada resikonya.',1,'Kata baku: “silakan” dan “risiko”.'],['Kalian semua keliru.',2,'Menyamaratakan dan tidak santun. Pakai “Kami memiliki pandangan yang berbeda karena …”.']]},sum:['Tanggapan: sikap, satu alasan, satu bukti, 3 sampai 5 kalimat.','Bahasa baku dan santun, serang gagasan bukan orangnya.','Bukti dapat dicek dan cocok dengan alasan; sebutkan batas data.']});
+let pg=0,TS={s:null,a:null,b:null};
+const TA={pro:["media sosial menjadi sumber belajar yang mudah dijangkau.","media sosial memberi ruang bagi remaja untuk berkreasi."],kon:["media sosial mudah membuat penggunanya kehilangan waktu.","media sosial membuka peluang terjadinya perundungan siber."]},TB=[["Banyak akun membagikan materi pelajaran secara gratis (teks, paragraf 4).","pro"],["Remaja yang suka melukis dapat membagikan prosesnya lewat video (teks, paragraf 3).","pro"],["Tugas sekolah tertunda dan waktu tidur berkurang (teks, paragraf 6).","kon"],["Komentar kasar dikirim tanpa bertatap muka (teks, paragraf 7).","kon"],["Berdasarkan survei APJII 2026, 82,8% responden mengakses media sosial 1 sampai 3 jam per hari.","data"]];
+function rb(b){const t=b[0];
+if(t=='p')return `<p>${b[1]}</p>`;
+if(t=='n')return `<div class="note0"><b>Ayo Ingat.</b> ${b[1]}</div>`;
+if(t=='rv')return `<div class="rvq"><b>🤔 ${b[1]}</b><br><button class="btn" onclick="this.hidden=true;this.nextElementSibling.hidden=false">Lihat jawaban</button><p hidden>${b[2]}</p></div>`;
+if(t=='mc')return `<div class="mcq"><b>✍️ ${b[1]}</b>${b[2].map((o,j)=>`<button class="opt" onclick="mc(this,${j},${b[3]})">${o}</button>`).join('')}<p class="fbx" hidden>${b[4]}</p></div>`;
+if(t=='tap')return `<div class="chips">${b[1].map(x=>`<span class="chip" onclick="this.classList.toggle('on')">${x[0]}<i>${x[1]}</i></span>`).join('')}</div>`;
+if(t=='cards')return `<div class="kg">${b[1].map(k=>`<div class="kd" onclick="this.classList.toggle('f')"><div class="kf">${k[0]}</div><div class="kb">${k[1]}</div></div>`).join('')}</div>`;
+if(t=='tbl')return `<div class="tw"><table><tr>${b[1].map(h=>`<th>${h}</th>`).join('')}</tr>${b[2].map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`;
+if(t=='bars')return `<div class="bars0">${b[1].map(x=>`<button class="br0" onclick="this.parentNode.nextElementSibling.textContent=this.dataset.m" data-m="${x[2]}"><span>${x[0]}</span><i style="width:${x[1]*2}%"></i><b>${x[1]}%</b></button>`).join('')}</div><p class="fbx">Ketuk satu batang untuk membaca maknanya.</p>`;
+if(t=='link')return `<div class="note0"><a class="btn" href="${b[1]}" target="_blank" rel="noopener noreferrer">${b[2]}</a>${b[3]?`<p class="hint" style="margin:8px 0 0">${b[3]}</p>`:''}</div>`;
+if(t=='build')return `<div class="tgp"><b>1 · Sikap</b><div class="cr" data-g="s"><button data-v="pro">Pro</button><button data-v="kon">Kontra</button></div><b>2 · Alasan</b><div class="cr" data-g="a"></div><b>3 · Bukti</b><div class="cr" data-g="b"></div></div><div class="note0" id="tgo"><b>Tanggapanmu:</b> <span>Pilih ketiganya dulu.</span></div><ul id="tgc" class="stp0"></ul>`;return ''}
+function mc(el,j,k){const q=el.parentNode;if(q.dataset.d)return;q.dataset.d=1;el.classList.add(j==k?'good':'bad');q.querySelectorAll('.opt')[k].classList.add('good');const f=q.querySelector('.fbx');f.hidden=false;f.textContent=(j==k?'✔ Tepat. ':'✖ Belum tepat. ')+f.textContent}
+function read(i,k){pg=k;const R=RD[i],P=R.r[pg],last=pg==R.r.length-1;$('#rd').innerHTML=`<div class="rpg tome"><div class="rh">Bab ${i+1} · ${BABS[i].n}</div><div class="dots">${R.r.map((_,j)=>`<i class="${j<=pg?'on':''}"></i>`).join('')}</div><small>Halaman ${pg+1} dari ${R.r.length}</small><div class="gd"><span class="gv">${RAKA()}</span><h3>${P.h}</h3></div><div class="orn">❦ ❦ ❦</div><div class="pg1">${P.b.map(rb).join('')}${last?`<div class="sumb"><b>Ringkasan bab</b><ul>${(BABS[i].sum||[]).map(x=>'<li>'+x+'</li>').join('')}</ul></div>`:''}</div><div class="ft">— ${pg+1} —</div><div class="nv">${pg?`<button class="btn" onclick="read(${i},${pg-1})">◀ Kembali</button>`:'<span></span>'}${last?`<button class="btn" onclick="openAct(${i});$('#act').scrollIntoView({behavior:'smooth'})">Mulai Tantangan ▶</button>`:`<button class="btn" onclick="read(${i},${pg+1})">Lanjut ▶</button>`}</div></div>`;$('#act').innerHTML='';if(document.querySelector('.tgp'))drawT();if(k)$('#rd').scrollIntoView()}
+function drawT(){const g=k=>document.querySelector('.cr[data-g="'+k+'"]'),o=$('#tgo span'),c=$('#tgc');
+g('a').innerHTML=TS.s?TA[TS.s].map((t,i)=>`<button data-v="${i}" class="${TS.a==i?'on':''}">${t}</button>`).join(''):'<i>Pilih sikap dulu.</i>';
+g('b').innerHTML=TB.map((t,i)=>`<button data-v="${i}" class="${TS.b==i?'on':''}">${t[0]}</button>`).join('');
+g('s').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v==TS.s));
+if(TS.s==null||TS.a==null||TS.b==null){o.textContent='Pilih ketiganya dulu.';c.innerHTML='';return}
+const bk0=TB[TS.b],cocok=bk0[1]=='data'||bk0[1]==TS.s;
+o.textContent='Saya '+(TS.s=='pro'?'pro':'kontra')+' karena '+TA[TS.s][TS.a]+' Buktinya, '+bk0[0].charAt(0).toLowerCase()+bk0[0].slice(1)+(bk0[1]=='data'?' Meskipun demikian, data ini tidak khusus remaja dan tidak menunjukkan dampaknya.':' Karena itu, pendapat ini sebaiknya diuji lagi dengan data yang dapat dicek.');
+c.innerHTML=[[1,'Sikap jelas'],[1,'Ada alasan'],[1,'Bukti dapat dicek pada teks atau infografik'],[cocok,'Bukti cocok dengan alasan'],[1,'Bahasa baku dan santun']].map(x=>`<li>${x[0]?'✔':'✖'} ${x[1]}</li>`).join('')}
+document.addEventListener('click',e=>{const b=e.target.closest('.tgp button');if(!b)return;const g=b.parentNode.dataset.g;if(g=='s'){TS.s=b.dataset.v;TS.a=null}else TS[g]=+b.dataset.v;drawT()});
+const XI=[[['Remaja bisa berkreasi dan berbagi karya lewat video singkat.',0,'Manfaat media sosial, jadi PRO.'],['Gulir tanpa akhir membuat pengguna sulit berhenti.',1,'Risiko media sosial, jadi KONTRA.']],
+[['Kekhawatiran lainnya adalah informasi yang tidak selalu benar.',2,'Menyampaikan kekhawatiran pihak yang tidak setuju: KONTRA.'],['Berdasarkan kedua pandangan tersebut, media sosial bisa menjadi sahabat sekaligus jebakan.',3,'“Berdasarkan kedua pandangan” merangkum dua sisi: SIMPULAN.']],
+null,
+[['Survei APJII 2026 melibatkan 8.700 responden.',0,'Ada angka, sumber, dan tahun: FAKTA.'],['Konten video pendek itu berbahaya bagi anak.',1,'“Berbahaya” adalah kata penilai: OPINI.']],
+[['Remaja yang aktif di media sosial pasti lebih sukses, karena semakin sering mengunggah semakin berhasil.',2,'Hanya “pasti”, tanpa data, dan tidak berlaku umum: LEMAH.'],['Media sosial membuat remaja kurang tidur karena gulir tanpa akhir, dan bisa dicek lewat catatan waktu layar.',0,'Alasan jelas, bisa dicek, tidak menyamaratakan: KUAT.']],
+[['Klaim: “Hanya 2,4% responden mengakses lebih dari 4 jam.” Data: 2,4% mengakses lebih dari 4 jam.',0,'Sejalan dengan data: COCOK.'],['Klaim: “Data APJII membuktikan semua remaja kecanduan.” Data: responden minimal 13 tahun, tanpa ukuran kecanduan.',1,'Data tidak khusus remaja dan tidak mengukur kecanduan: TIDAK COCOK.']],
+[['Pendapat Dina tak perlu didengar karena ia sering terlambat.',0,'Yang dinilai orangnya: serangan pribadi.'],['Ponsel pasti baik karena banyak yang memakainya.',1,'Banyak pengguna bukan bukti: ikut-ikutan.']]];
+XI.forEach((e,i)=>e&&BABS[i].a.items.push(...e));
+function BAB(i){go('m');bab(i)}
+const CASES=[
+{t:'Rapat OSIS: Batas Waktu Media Sosial',d:'Kamu moderator. Lawan: Seksi Tata Tertib.',r:[
+{npc:'Media sosial harus dibatasi total di sekolah! Temanku nilainya turun gara-gara TikTok.',c:[
+['KONTRA','Pengalaman satu orang belum cukup jadi bukti. Adakah data yang mengaitkan media sosial dengan nilai? Media sosial juga bisa dipakai sebagai sumber belajar.',20,'Tepat. Kamu menguji argumen dengan pertanyaan uji: hanya satu pengalaman, tanpa data.',5],
+['PRO','Setuju, media sosial memang mengganggu. Bu guru juga sering mengeluh.',5,'Kamu setuju tanpa menguji bukti. Keluhan bukan data.',5],
+['KONTRA','Kamu bilang begitu karena kamu sendiri kecanduan TikTok, kan?',-25,'Serangan pribadi. Yang diuji seharusnya argumennya.',7]]},
+{npc:'Semua sekolah modern sudah membatasi media sosial. Jadi sekolah kita juga harus!',c:[
+['KONTRA','Banyak sekolah melakukannya belum berarti benar. Sebutkan sumber dan tahunnya, lalu kita cek apakah cocok dengan sekolah kita.',20,'Bagus. Kamu memeriksa kredibilitas bukti.',6],
+['PRO','Pembatasan saat jam pelajaran ada benarnya karena notifikasi memecah fokus. Namun, alasan “sekolah lain melakukannya” belum kuat.',8,'Cukup baik, tetapi kamu belum meminta bukti konkret.',6],
+['PRO','Betul, jangan sampai kita ketinggalan, semua orang juga begitu.',-25,'Ikut-ikutan. Banyaknya pelaku bukan bukti.',7]]},
+{npc:'Jadi pilih saja: larang total atau bebas total!',c:[
+['SIMPULAN','Ada jalan tengah: media sosial boleh dipakai untuk belajar dengan izin guru dan disimpan saat pelajaran biasa. Aturannya dievaluasi dengan data setelah tiga bulan.',20,'Simpulan seimbang, lahir setelah menimbang dua sisi.',1],
+['SIMPULAN','Larang saja supaya urusan cepat beres.',5,'Simpulan tanpa menimbang sisi lain.',1],
+['KONTRA','Kalau tidak bebas total, sekolah ini melanggar hak semua orang dan akan hancur!',-25,'Menakut-nakuti dan hitam-putih.',7]]}]},
+{t:'Debat TV: Media Sosial untuk Belajar',d:'Kamu pembicara utama. Lawan: Pengamat Pendidikan.',r:[
+{npc:'Media sosial tidak ada gunanya untuk belajar! Isinya hiburan dan membuat siswa malas!',c:[
+['KONTRA','Tidak semuanya begitu. Banyak akun membagikan materi pelajaran gratis (teks, paragraf 4). Malas atau tidak bergantung cara pakainya. Apa buktinya semua siswa jadi malas?',20,'Kuat. Kamu memisahkan cara pakai, memberi contoh, dan menantang generalisasi.',5],
+['PRO','Media sosial memang bikin malas, aku sendiri jadi jarang belajar.',5,'Itu pengalaman satu orang, bukan bukti umum.',5],
+['KONTRA','Yang melarang pasti guru gaptek, jadi tidak perlu didengar!',-25,'Serangan pribadi.',7]]},
+{npc:'Sebuah blog menyebut 100% remaja pengguna media sosial nilainya turun!',c:[
+['KONTRA','Sebelum percaya, cek penulisnya, tahunnya, dan jumlah respondennya. Angka 100% patut dicurigai karena data nyata jarang sesempurna itu.',20,'Tepat. Sumber, tahun, responden.',6],
+['PRO','Kalau datanya begitu, berarti memang harus dibatasi.',5,'Kamu menelan angka tanpa memeriksa sumbernya.',6],
+['KONTRA','Datanya pasti bohong, penulisnya kan tidak suka media sosial!',-25,'Menuduh tanpa dasar, itu serangan pribadi.',7]]},
+{npc:'Jadi media sosial dipakai untuk belajar atau tidak? Jawab sekarang!',c:[
+['SIMPULAN','Media sosial boleh jadi alat bantu belajar dengan aturan jelas: waktu dibatasi dan informasi diperiksa sebelum dibagikan. Aturan ditinjau berkala berdasarkan bukti.',20,'Jalan tengah yang masuk akal dan bisa dicek.',1],
+['SIMPULAN','Bebaskan saja, semua orang juga sudah memakainya.',5,'Alasan ikut-ikutan, tidak ada bukti.',7],
+['KONTRA','Kalau media sosial dibatasi, sekolah kita tertinggal dan semua siswa pasti gagal!',-25,'Menakut-nakuti tanpa bukti.',7]]}]},
+{t:'Sidang Warga: Media Sosial & Remaja',d:'Kamu juru bicara. Lawan: Ketua RW.',r:[
+{npc:'Remaja kecanduan media sosial! Rata-rata mereka main 10 jam sehari!',c:[
+['KONTRA','Data APJII 2026: 44,9% mengakses 1–2 jam dan 37,9% 2–3 jam per hari, gabungan 82,8% di 1–3 jam. Klaim 10 jam tidak cocok dengan data itu.',20,'Sempurna. Kamu mencocokkan klaim dengan data.',6],
+['PRO','Memang banyak remaja kecanduan, aku sering lihat mereka main HP di warung.',5,'Pengamatan sekilas bukan data.',5],
+['KONTRA','Orang tua zaman sekarang lebay, semua dianggap kecanduan!',-25,'Menyerang pribadi dan menggeneralisasi.',7]]},
+{npc:'Isinya cuma hiburan dan merusak. Tidak ada gunanya!',c:[
+['PRO','Tidak semuanya begitu. TikTok memang paling sering diakses (31,8%), tetapi isinya beragam: ada konten belajar dan usaha kecil. Yang perlu dilihat adalah cara memakainya.',20,'Kamu menolak generalisasi dengan data dan contoh.',4],
+['PRO','Ada gunanya sedikit, tetapi sebagian besar memang merusak.',5,'Kamu mengalah tanpa meminta bukti.',5],
+['KONTRA','Kalau medsos dilarang, kalian pasti tidak punya teman dan depresi!',-25,'Menakut-nakuti, tanpa bukti.',7]]},
+{npc:'Intinya: dukung atau tolak media sosial untuk remaja?',c:[
+['SIMPULAN','Media sosial punya manfaat dan risiko. Remaja dapat memakainya dengan batas waktu, memeriksa informasi sebelum membagikan, dan didampingi keluarga serta sekolah.',20,'Simpulan seimbang dan bisa dijalankan.',1],
+['SIMPULAN','Tolak saja, lebih aman.',5,'Simpulan tanpa menimbang manfaatnya.',1],
+['SIMPULAN','Semua orang sudah pakai, jadi pasti aman.',-25,'Ikut-ikutan, bukan bukti.',7]]}]}
+];
+let G=null;
+function menu(){G=null;$('#g').innerHTML=stage(true)+`<div class="card0"><p>Lawan bicara melontarkan pernyataan. Pilih kartu respons: <b>Pro</b>, <b>Kontra</b>, atau <b>Simpulan</b>. Argumen logis dan berbukti menggerakkan meteran juri ke arahmu. Salah nalar menurunkannya.</p><p class="hint">Catatan: Bukti dan bintang hanya tersimpan di perangkat ini, tidak dikirim ke guru, dan tidak dipakai sebagai nilai.</p><p class="hint">Bukti dari Materi (${S.done.length}) bisa dipakai untuk menyingkirkan satu kartu jebakan. ${S.done.length?'':'Selesaikan tantangan di Materi dulu agar punya bantuan.'}</p></div><div class="cs">${CASES.map((c,i)=>`<div class="card0" onclick="start(${i})"><h3 style="font-size:17px">${c.t}</h3><p>${c.d}</p><b>${'★'.repeat(S.stars[i]||0)+'☆'.repeat(3-(S.stars[i]||0))}</b></div>`).join('')}</div>`;
+resetP();cut('H');P('h','talk');type('h','Pengadilan Nalar dibuka! Pilih kasus yang akan disidangkan.',()=>P('h','idle'))}
+function start(n){G={n,r:0,m:50,used:0,weak:[],lock:true};
+$('#g').innerHTML=`<div class="meter"><div class="ml"><b>${CASES[n].t}</b><span id="rd"></span></div><div class="mt"><div class="mf" id="mf"></div></div><div class="ml"><span>Juri condong ke lawan</span><b id="mp"></b><span>Juri condong ke kamu</span></div></div>`+stage(true)+'<div id="gc"></div>';round()}
+const mt=()=>{$('#mf').style.width=G.m+'%';$('#mp').textContent=G.m+'%'};
+function round(){const R=CASES[G.n].r[G.r];G.lock=true;mt();$('#rd').textContent='Ronde '+(G.r+1)+'/3';$('#gc').innerHTML='';resetP();cut('L');P('g','point','a');
+type('g',R.npc,()=>{P('g','idle');setTimeout(()=>{cut('P');P('n','think');type('n','Pilih kartu respons yang paling tepat.',()=>{});cards()},700)})}
+function cards(){const R=CASES[G.n].r[G.r];G.lock=false;G.ord=[0,1,2].sort(()=>Math.random()-.5);
+$('#gc').innerHTML=`<div style="text-align:right;margin:10px 0 2px"><button class="btn" id="hb" onclick="hint()" style="font-size:13px">📜 Pakai Bukti (${Math.max(0,S.done.length-G.used)})</button></div><div class="cards">${G.ord.map(i=>`<button class="gc" id="c${i}" onclick="pick(${i})"><span class="tp">${R.c[i][0]}</span>${R.c[i][1]}</button>`).join('')}</div><div id="res"></div>`}
+function hint(){if(G.lock||S.done.length-G.used<=0)return;const R=CASES[G.n].r[G.r];const i=R.c.findIndex(c=>c[2]<0);G.used++;$('#c'+i).classList.add('gone');cut('W');stamp('BUKTI!');resetP();P('w','talk');type('w','Saya saksinya. Periksa dulu: apakah klaim itu punya bukti yang bisa dicek?',()=>P('w','idle'));setTimeout(()=>{cut('P');resetP()},3200);$('#hb').textContent='📜 Pakai Bukti ('+Math.max(0,S.done.length-G.used)+')'}
+function pick(i){if(G.lock)return;G.lock=true;const R=CASES[G.n].r[G.r],c=R.c[i];G.m=Math.max(0,Math.min(100,G.m+c[2]));mt();
+document.querySelectorAll('.gc').forEach(b=>b.disabled=true);$('#c'+i).classList.add('pk');
+const good=c[2]>=20,bad=c[2]<0;if(c[2]<20&&!G.weak.includes(c[4]))G.weak.push(c[4]);
+const last=G.r==2||G.m<=0;
+const fb=()=>{resetP();cut('H');P('h',bad?'no':good?'nod':'think');type('h',c[3],()=>{});
+$('#res').innerHTML=`<div class="card0"><b>${good?'✔':bad?'✖':'△'} ${c[2]>0?'+':''}${c[2]} poin juri</b><br><button class="link" onclick="BAB(${c[4]-1})">Pelajari lagi: Bab ${c[4]} (${BABS[c[4]-1].n})</button><div style="text-align:right;margin-top:8px"><button class="btn" onclick="${last?'fin2()':'G.r++;round()'}">${last?'Putusan Juri ⚖️':'Lanjut ▶'}</button></div></div>`;$('#res').scrollIntoView({behavior:'smooth',block:'nearest'})};
+resetP();
+if(bad){cut('L');P('g','slam','a');P('n','sweat','s');setTimeout(()=>{stamp('KEBERATAN!');slamFx()},560);setTimeout(fb,1900)}
+else if(good){cut('P');P('n','slam','h');setTimeout(()=>{stamp('DITERIMA!');slamFx()},560);setTimeout(()=>{cut('L');P('g','sweat','s')},1300);setTimeout(()=>{cut('H');P('h','gavel');setTimeout(gavFx,300)},1900);setTimeout(fb,3000)}
+else{cut('P');P('n','think');stamp('CUKUP…');setTimeout(fb,1300)}}
+function fin2(){const m=G.m,win=m>=70,mid=m>=40&&!win,st=m>=90?3:m>=70?2:m>=50?1:0;
+if(st>(S.stars[G.n]||0)){S.stars[G.n]=st;save()}const w=[...G.weak].sort();
+$('#g').innerHTML=stage(true)+`<div class="card0" style="text-align:center"><h2 class="ttl" style="font-size:26px">${win?'KAMU MENANG!':mid?'SIDANG DITUNDA':'JURI TIDAK YAKIN'}</h2><p>Meteran akhir <b>${m}%</b> · ${'★'.repeat(st)+'☆'.repeat(3-st)}</p>${w.length?`<p>Bab yang perlu diulang: ${w.map(b=>`<button class="link" onclick="BAB(${b-1})">Bab ${b} (${BABS[b-1].n})</button>`).join(', ')}</p>`:'<p>Tidak ada bab yang perlu diulang. Mantap!</p>'}<button class="btn" onclick="start(${G.n})">Ulangi 🔁</button> <button class="btn" onclick="menu()">Pilih Kasus</button></div>`;
+resetP();cut('H');P('h',win?'gavel':mid?'think':'no');if(win)setTimeout(gavFx,300);P('n',win?'cheer':'sweat',win?'h':'s');
+type('h',win?'Putusan: argumenmu logis dan berbukti. Pengadilan memenangkan kamu!':mid?'Juri masih ragu. Perkuat bukti dan hindari salah nalar.':'Terlalu banyak salah nalar. Pelajari lagi materinya, lalu ajukan banding.',()=>{});if(win)stamp('MENANG!')}
+/* ===== perluasan materi (rujukan: modul ajar sebagai peta jalan; BSKAP 2025; Buku Siswa Kemendikbudristek 2024) ===== */
+const ins=(i,p,pg)=>RD[i].r.splice(p,0,pg);
+ins(0,1,{h:"Teks diskusi ada di mana saja?",b:[["p","Kamu sebenarnya sering bertemu teks diskusi, hanya belum memakai namanya. Setiap kali dua pihak berbeda pendapat dan masing-masing menjelaskan alasannya, di situlah diskusi terjadi."],["cards",[["Di sekolah","Rapat OSIS membahas aturan ponsel, atau kelas memilih tujuan studi tur."],["Di media","Debat di televisi, podcast, dan rubrik opini di koran atau situs berita."],["Di media sosial","Kolom komentar yang ramai membahas satu topik. Bedanya, komentar sering memihak dan belum tentu beralasan."],["Di rumah","Keluarga menimbang apakah anak boleh punya akun media sosial sendiri."]]],["n","Teks diskusi bisa lisan atau tulis. Keduanya menimbang dua sisi sebelum mengambil sikap."]]});
+ins(0,4,{h:"Beda dengan teks lain",b:[["p","Banyak teks memuat pendapat, tetapi tujuannya berbeda. Bedakan lewat tujuan dan sikap penulisnya."],["tbl",["Jenis teks","Tujuan","Sikap penulis"],[["Diskusi","Menimbang dua sisi isu","Belum memihak sampai simpulan"],["Argumentasi","Meyakinkan pembaca","Memihak sejak awal"],["Eksposisi","Menjelaskan informasi","Netral, tidak sedang berdebat"],["Persuasi","Mengajak pembaca bertindak","Membujuk dengan halus"]]],["mc","Sebuah teks membahas pro dan kontra penggunaan AI di sekolah, lalu ditutup sikap “boleh dengan aturan”. Jenis teksnya…",["Teks diskusi","Teks persuasi","Teks eksposisi"],0,"Dua sisi ditimbang dulu, baru ada simpulan. Itu ciri teks diskusi."]]});
+ins(0,5,{h:"Kata kunci bab ini",b:[["cards",[["Isu","Masalah yang diperdebatkan dan belum disepakati."],["Argumen","Pendapat yang disertai alasan dan bukti."],["Pro","Pihak yang setuju beserta alasannya."],["Kontra","Pihak yang tidak setuju beserta alasannya."],["Bukti","Data, contoh, atau keterangan yang dapat diperiksa kebenarannya."],["Simpulan","Sikap akhir setelah dua sisi ditimbang."]]],["n","Kalau lupa arti sebuah kata, kembali ke halaman ini atau cari di KBBI daring (kbbi.kemdikbud.go.id)."]]});
+ins(1,1,{h:"Satu teks mini, empat bagian",b:[["p","Baca teks mini berikut. Ketuk setiap bagian untuk melihat namanya dan tugasnya."],["tap",[["“Haruskah siswa SMP membawa ponsel ke sekolah?”","ISU: pertanyaan yang diperdebatkan"],["“Pihak yang setuju berpendapat ponsel mempermudah belajar karena kamus dan bahan bacaan dapat dibuka kapan saja.”","PRO: pendapat + alasan"],["“Namun, pihak yang tidak setuju menilai notifikasi membuat siswa sulit fokus di kelas.”","KONTRA: pendapat berlawanan + alasan (penanda: Namun)"],["“Dengan demikian, ponsel boleh dibawa asalkan dipakai untuk belajar dan disimpan saat pelajaran biasa.”","SIMPULAN: sikap setelah menimbang (penanda: Dengan demikian)"]]],["n","Tiap bagian pendek, tetapi punya satu tugas. Jika satu bagian hilang, teks tidak lagi seimbang."]]});
+ins(2,2,{h:"Penanda selain pertentangan",b:[["p","Konjungsi pertentangan hanya satu jenis. Teks diskusi juga memakai penanda lain agar alurnya mudah diikuti."],["tbl",["Fungsi","Penanda","Contoh"],[["Pertentangan","namun, tetapi, sebaliknya","Namun, pihak lain menilai…"],["Penambahan","selain itu, bahkan, juga","Selain itu, media sosial membuka peluang usaha."],["Sebab-akibat","karena, sehingga, oleh karena itu","Notifikasi memecah fokus, sehingga belajar terganggu."],["Simpulan","dengan demikian, jadi, berdasarkan hal itu","Dengan demikian, ponsel perlu diatur."]]],["mc","“Ponsel dipakai untuk belajar. ___, sekolah perlu membuat aturan penggunaannya.”",["Namun","Oleh karena itu","Sebaliknya"],1,"Kalimat kedua adalah akibat dari kalimat pertama, jadi cocok memakai penanda sebab-akibat."]]});
+ins(3,1,{h:"Data, fakta, dan kalimat objektif",b:[["p","Saat menilai bukti, bedakan data, fakta, dan kalimat objektif. Ketuk kartu untuk membuka."],["cards",[["Data","Informasi yang dikumpulkan dari lapangan. Bentuknya bisa angka (kuantitatif) atau bukan angka (kualitatif)."],["Fakta","Data yang benar-benar terjadi dan bisa diperiksa. Data yang salah bukan fakta."],["Kalimat objektif","Berisi fakta, tanpa pendapat pribadi, tanpa kata kiasan atau kata beremosi."],["Kalimat subjektif","Memuat penilaian pribadi, misalnya “terbaik”, “mengerikan”, “mungkin”, “seharusnya”."]]],["mc","Mana kalimat yang objektif?",["Kelas VIII A berjumlah 32 siswa, 18 di antaranya perempuan.","Kelas VIII A adalah kelas paling rajin.","Mungkin kelas VIII A paling pintar."],0,"Hanya kalimat pertama yang berisi angka dan bisa diperiksa."]]});
+ins(4,2,{h:"Menguji satu argumen pelan-pelan",b:[["p","Argumen yang diuji: <b>“Ponsel harus dilarang karena banyak siswa bermain game di kelas.”</b> Ketuk tiap pertanyaan untuk melihat jawabannya."],["rv","Uji 1: Apa alasannya?","Ada. Game mengganggu pelajaran. Satu uji lolos."],["rv","Uji 2: Adakah data yang bisa dicek?","Belum. Tidak ada jumlah siswa, waktu, atau sumbernya."],["rv","Uji 3: Berlaku untuk banyak orang?","Belum jelas. Kata “banyak” tidak menyebut berapa banyak."],["n","Hasil: satu dari tiga uji lolos, jadi argumennya LEMAH. Cara memperkuat: tambahkan hasil pengamatan atau survei kelas, misalnya jumlah siswa yang bermain game saat pelajaran."]]});
+ins(5,2,{h:"Mencari bukti sendiri",b:[["p","Bukti tidak harus selalu dari internet. Pilih cara yang sesuai dengan isu."],["cards",[["Observasi","Amati langsung, lalu catat hari, tempat, dan jumlahnya."],["Wawancara","Tanya orang yang tahu, misalnya guru BK. Catat nama dan jabatannya."],["Sumber tertulis","Cari lembaga resmi, situs .go.id, survei, atau jurnal. Catat tahun dan jumlah respondennya."]]],["n","Catat selalu sumber, tanggal, dan nama pemberi informasi agar buktimu bisa dicek orang lain."],["mc","Sumber mana yang paling layak untuk data jumlah pengguna internet?",["Survei lembaga resmi lengkap dengan tahun dan jumlah responden","Unggahan anonim tanpa sumber","Kata teman sebangku"],0,"Sumber resmi yang menyebut tahun dan responden bisa diperiksa. Dua lainnya tidak."]]});
+ins(6,1,{h:"Menanggapi argumen lemah dengan santun",b:[["p","Mengenali jebakan saja belum cukup. Kamu juga perlu menanggapinya tanpa ikut menyerang."],["tbl",["Jebakan","Tanggapan santun"],[["Serangan pribadi","Mari kita bahas gagasannya, bukan orangnya."],["Ikut-ikutan","Boleh disebutkan sumbernya? Banyak yang melakukan belum tentu benar."],["Menakut-nakuti","Adakah data yang menunjukkan akibat itu pasti terjadi?"],["Hitam-putih","Adakah pilihan tengah, misalnya boleh dengan syarat?"],["Menyamaratakan","Apakah berlaku untuk semua, atau hanya sebagian?"]]],["mc","Lawan berkata, “Kamu kan nilainya jelek, jadi pendapatmu tidak penting.” Tanggapan terbaik?",["Kamu sendiri juga malas!","Mari kita nilai alasan yang saya sampaikan, bukan nilai saya.","Baiklah, saya diam saja."],1,"Tanggapan kedua menarik pembicaraan kembali ke gagasan tanpa membalas serangan."]]});
+ins(7,1,{h:"Sebelum dan sesudah",b:[["p","Bandingkan satu tanggapan yang diperbaiki."],["cards",[["Sebelum","“Media sosial itu gak ada gunanya, banget deh.” Masalah: tidak baku, tidak beralasan, tidak ada bukti."],["Sesudah","“Saya pro media sosial untuk belajar karena banyak akun membagikan materi pelajaran gratis (teks, paragraf 4). Meskipun demikian, bukti ini perlu diuji lagi dengan data yang dapat dicek.” Ada sikap, alasan, bukti, dan catatan."]]],["n","Setelah menulis, periksa: sikap jelas? alasan ada? bukti bisa dicek dan cocok? bahasa baku dan santun?"]]});
+
+/* ===== penyelarasan dengan Modul Ajar v4 (TP 1 dan TP 2) ===== */
+['TP 1 (indikator a): menemukan isu serta pendapat pro dan kontra','TP 1 (indikator a): menemukan isu, pro, kontra, dan simpulan beserta kata penandanya','TP 1 (indikator a): mengenali kata penanda, termasuk konjungsi pertentangan','TP 1 (indikator b): membedakan fakta dari opini','TP 1 (indikator b): menilai argumen kuat, cukup kuat, atau lemah dengan tiga pertanyaan uji','TP 2 (indikator a dan b): membandingkan klaim dengan data dan menilai kredibilitas bukti','Penguatan TP 1b dan TP 2c: mengenali dan menanggapi argumen lemah dengan santun','TP 2 (indikator c): menyatakan pendapat pro atau kontra beserta alasan dan bukti'].forEach((t,i)=>RD[i].tp=t);
+ins(0,0,{h:"Pemanasan: sudah siap?",b:[["p","Sebelum mulai, jawab dua pertanyaan pemantik ini dalam hati atau tulis di bukumu."],["rv","Pernahkah kamu berdebat tentang aturan atau kebiasaan di sekolah? Kamu di pihak mana, dan apa alasanmu?","Tidak ada jawaban yang salah. Simpan alasanmu, nanti kita uji apakah alasan itu kuat."],["rv","Menurutmu, apakah semua pendapat sama kuatnya? Mengapa?","Belum tentu. Pendapat yang kuat punya alasan dan bukti yang bisa diperiksa."],["p","Cek kesiapan: ketuk tiap kalimat untuk melihat jawabannya."],["tap",[["Fakta atau pendapat? “Jakarta adalah ibu kota Indonesia.”","FAKTA: bisa diperiksa."],["Fakta atau pendapat? “Pelajaran Bahasa Indonesia paling seru.”","PENDAPAT: tidak ada ukuran yang bisa dicek."],["Pilih penghubung: “Aku ingin ikut, ___ hujan deras.”","tetapi (pertentangan)"],["Pilih penghubung: “Dia terlambat ___ bangun kesiangan.”","karena (sebab)"]]]]});
+ins(4,3,{h:"Latihan dari tiket keluar",b:[["mc","“Pokoknya anak yang bermain ponsel itu pemalas.” Kuat atau lemah?",["Kuat","Cukup kuat","Lemah"],2,"Tidak ada alasan selain “pokoknya”, tidak ada data, dan menyamaratakan semua anak. Tiga uji tidak terpenuhi."],["rv","Bagaimana cara memperkuatnya?","Ubah menjadi pendapat yang beralasan dan bisa dicek, misalnya: “Sebagian siswa sulit fokus karena notifikasi, menurut hasil pengamatan guru selama satu minggu.”"]]});
+
+/* ===== pengembangan materi v5: pengertian dan uraian lebih lengkap (rujukan: modul ajar v4, Panduan BSKAP 2025) ===== */
+const aft=(i,h,pg)=>{const k=RD[i].r.findIndex(p=>p.h===h);if(k<0)throw new Error('halaman tidak ditemukan: '+h);RD[i].r.splice(k+1,0,pg)};
+
+/* ---------- Bab 1 ---------- */
+aft(0,"Mulai dari grup kelas",{h:"Apa itu teks diskusi?",b:[
+["p","<b>Teks diskusi</b> adalah teks yang membahas satu isu atau persoalan dari dua sisi atau lebih, yaitu pendapat yang setuju (<b>pro</b>) dan yang tidak setuju (<b>kontra</b>), lalu ditutup dengan <b>simpulan</b>. Teks ini dibuat agar pembaca dapat menimbang dengan adil sebelum mengambil sikap."],
+["p","Ada tiga kata kunci dalam pengertian itu. Ketuk kartu untuk membukanya."],
+["cards",[["Satu isu","Teks berfokus pada satu persoalan yang sedang diperdebatkan, bukan banyak topik sekaligus."],["Dua sisi atau lebih","Pro dan kontra mendapat ruang seimbang, masing-masing disertai alasan."],["Simpulan","Sikap atau rangkuman baru muncul setelah semua sisi ditimbang."]]],
+["rv","Sebuah teks hanya memuji satu pendapat dan menjelekkan pendapat lain. Apakah itu teks diskusi?","Bukan. Teks yang memihak sejak awal lebih dekat ke teks argumentasi. Teks diskusi menimbang dua sisi secara seimbang."],
+["n","Rumus mudah: teks diskusi = isu + pro + kontra + simpulan."],
+["mc","Pernyataan yang tepat tentang teks diskusi adalah…",["Membujuk pembaca agar memilih satu pendapat","Menimbang dua sisi suatu isu sebelum bersikap","Menjelaskan langkah mengerjakan sesuatu secara berurutan"],1,"Teks diskusi menimbang pro dan kontra lebih dulu. Pilihan pertama ciri teks persuasi, pilihan ketiga ciri teks prosedur."]
+]});
+aft(0,"Apa itu teks diskusi?",{h:"Untuk apa teks diskusi?",b:[
+["p","Tujuan utama teks diskusi adalah <b>memberi pandangan yang seimbang</b> agar pembaca dapat memutuskan atau bersikap berdasarkan alasan dan bukti, bukan ikut-ikutan."],
+["cards",[["Bagi pembaca","Mendapat gambaran utuh sehingga tidak mudah terpengaruh oleh satu pihak."],["Bagi penulis","Berlatih menyusun alasan dan bukti serta menghargai pendapat yang berbeda."],["Bagi masyarakat","Perbedaan pendapat dibahas dengan kepala dingin sehingga keputusan bersama lebih adil."]]],
+["p","Kemampuan ini sejalan dengan Capaian Pembelajaran Fase D elemen Membaca dan Memirsa dalam Panduan Mata Pelajaran Bahasa Indonesia (BSKAP, 2025): menginterpretasi informasi untuk menyatakan pendapat pro atau kontra, lalu mengevaluasi kualitas dan kredibilitas teks dengan sumber informasi lain."],
+["rv","Penetrasi internet Indonesia mencapai 81,72% (APJII, 2026). Mengapa kemampuan menimbang dua sisi makin penting?","Karena informasi datang dari banyak arah dan tidak semuanya benar atau seimbang. Orang yang terbiasa menimbang pro dan kontra serta memeriksa bukti tidak mudah percaya begitu saja."],
+["n","Tujuan teks diskusi adalah menimbang, bukan memenangkan debat."]
+]});
+aft(0,"Lima ciri teks diskusi",{h:"Ciri-ciri dalam teks contoh",b:[
+["p","Ciri bukan sekadar hafalan. Ketuk tiap kutipan dari teks “Media Sosial bagi Remaja: Sahabat atau Jebakan?” untuk melihat ciri yang tampak."],
+["tap",[["“Kebiasaan ini memunculkan perbedaan pendapat.” (paragraf 2)","Ciri 1: ada isu yang diperdebatkan."],["Paragraf 3 sampai 5 (pro) dan paragraf 6 sampai 8 (kontra), masing-masing tiga paragraf.","Ciri 2: seimbang. Pro dan kontra mendapat ruang sama besar."],["“Contohnya, remaja yang suka melukis dapat membagikan proses melukisnya lewat video singkat…” (paragraf 3)","Ciri 3: beralasan. Pendapat ditopang contoh."],["“Namun, pihak yang tidak setuju menilai…” (paragraf 6)","Ciri 4: bahasa baku dan santun, memakai konjungsi pertentangan. Yang dibahas pendapatnya, bukan orangnya."],["“Berdasarkan kedua pandangan tersebut…” (paragraf 9)","Ciri 5: bersimpulan. Simpulan merangkum dua sisi."]]],
+["n","Paragraf 5 sengaja dibuat lemah (“pasti lebih sukses”) untuk latihan menilai argumen di Bab 5."]
+]});
+aft(0,"Layakkah jadi isu?",{h:"Cara membaca teks diskusi",b:[
+["p","Membaca teks diskusi berbeda dengan membaca cerita. Kamu perlu membaca sambil menandai. Ikuti lima langkah berikut."],
+["cards",[["1 · Tebak dari judul","Judul sering memuat isu atau dua pilihan, misalnya “Sahabat atau Jebakan?”."],["2 · Temukan isu","Cari pertanyaan atau kalimat yang menyebut adanya perbedaan pendapat, biasanya di paragraf awal."],["3 · Tandai pro dan kontra","Beri warna atau tanda berbeda. Cari penandanya: “pihak yang setuju”, “namun”, “sebaliknya”."],["4 · Periksa alasan dan bukti","Pada tiap argumen, tanyakan: apa alasannya, dan adakah contoh atau data?"],["5 · Baca simpulan","Pastikan simpulan berasal dari argumen yang sudah dibahas, bukan gagasan baru."]]],
+["mc","Teks berjudul “Perlukah Siswa Dibatasi Memakai Ponsel?” baru kamu terima. Langkah pertama yang tepat adalah…",["Langsung menulis simpulan sendiri","Menebak isu dari judul, lalu mencarinya di paragraf awal","Menghafal seluruh teks"],1,"Judul memberi petunjuk isu. Setelah itu cari kalimat yang menegaskannya di paragraf awal."]
+]});
+
+/* ---------- Bab 2 ---------- */
+aft(1,"Cari penandanya di teks A.2",{h:"Peta paragraf teks A.2",b:[
+["p","Teks “Media Sosial bagi Remaja: Sahabat atau Jebakan?” terdiri atas sembilan paragraf. Teks utuhnya ada di tab 📖 Bacaan. Nyalakan label struktur di sana untuk melihat bagian tiap paragraf."],
+["tbl",["Paragraf","Bagian","Isi singkat"],[["1 sampai 2","Isu","Latar: media sosial dekat dengan remaja. Muncul perbedaan pendapat dan pertanyaan pokok."],["3 sampai 5","Argumen pro","Berkreasi, sumber belajar, dan satu pendapat lemah (paragraf 5)."],["6 sampai 8","Argumen kontra","Kehilangan waktu, perundungan siber, dan informasi yang tidak selalu benar."],["9","Simpulan","Menimbang dua sisi, lalu menyarankan batas waktu dan pemeriksaan informasi."]]],
+["p","Pro dan kontra sama-sama tiga paragraf, jadi teks ini seimbang."],
+["mc","Paragraf 6 diawali kata “Namun”. Paragraf itu termasuk bagian…",["Isu","Argumen kontra","Simpulan"],1,"“Namun” menandai peralihan ke pihak yang berlawanan. Isinya alasan pihak yang tidak setuju."]
+]});
+aft(1,"Peta paragraf teks A.2",{h:"Bagian isu lebih dalam",b:[
+["p","Isu yang baik biasanya disusun dalam tiga langkah: <b>latar</b>, <b>perbedaan pendapat</b>, lalu <b>pertanyaan pokok</b>. Ketuk kutipan dari paragraf 1 dan 2 untuk membuktikannya."],
+["tap",[["“Media sosial sudah menjadi bagian dari keseharian remaja.”","LATAR: hal yang dekat dengan pembaca."],["“Kebiasaan ini memunculkan perbedaan pendapat.”","PERBEDAAN PENDAPAT: pembaca diberi tahu ada dua pandangan."],["“Apakah media sosial lebih tepat disebut sahabat atau justru jebakan bagi remaja?”","PERTANYAAN POKOK: inti yang akan dibahas."]]],
+["mc","Mana kalimat isu yang paling baik?",["Media sosial mulai dipakai orang pada awal tahun 2000-an.","Perlukah remaja dibatasi memakai media sosial?","Media sosial pasti merusak remaja."],1,"Isu berupa pertanyaan yang bisa dibela dua sisi. Pilihan pertama adalah fakta, pilihan ketiga sudah memihak."],
+["n","Isu tidak harus berbentuk pertanyaan, tetapi pertanyaan mempermudah pembaca mengenali pokok masalah."]
+]});
+aft(1,"Bagian isu lebih dalam",{h:"Argumen: pendapat, alasan, bukti",b:[
+["p","Satu paragraf argumen yang kuat memuat tiga hal: <b>pendapat</b>, <b>alasan</b>, dan <b>bukti atau contoh</b>. Lihat pembuktiannya pada dua paragraf teks A.2."],
+["tbl",["Unsur","Paragraf 3 (pro)","Paragraf 6 (kontra)"],[["Pendapat","Media sosial memberi ruang untuk berkreasi.","Media sosial mudah membuat pengguna kehilangan waktu."],["Alasan","Karya yang dulu hanya dilihat keluarga kini bisa dinikmati banyak orang dan mendapat masukan.","Gulir tanpa akhir dan rekomendasi video membuat pengguna sulit berhenti."],["Bukti atau contoh","Remaja pelukis membagikan proses melukis lewat video singkat.","Tugas sekolah tertunda dan waktu tidur berkurang."]]],
+["rv","Apa yang membuat paragraf 5 (“pasti lebih sukses”) lebih lemah daripada paragraf 3?","Paragraf 5 hanya punya pendapat dengan kata “pasti”. Tidak ada alasan yang jelas dan tidak ada contoh atau data yang bisa dicek."],
+["n","Satu paragraf, satu argumen. Jangan mencampur dua argumen dalam satu paragraf."]
+]});
+aft(1,"Argumen: pendapat, alasan, bukti",{h:"Simpulan yang baik",b:[
+["p","Simpulan adalah tempat penulis akhirnya bersikap. Simpulan yang baik memenuhi tiga syarat."],
+["cards",[["Merangkum dua sisi","Menyebut kembali manfaat dan risiko secara singkat."],["Memberi sikap","Misalnya “boleh dengan syarat” atau “perlu diatur”."],["Tidak menambah alasan baru","Semua pertimbangan sudah dibahas pada argumen sebelumnya."]]],
+["p","Contoh dari paragraf 9: simpulan dibuka dengan penanda “Berdasarkan kedua pandangan tersebut”, lalu menyatakan bahwa media sosial bisa menjadi sahabat sekaligus jebakan, tergantung cara memakainya. Setelah itu ada saran: membatasi waktu, memeriksa informasi, dan memakai fitur blokir serta laporkan."],
+["mc","Mana simpulan yang paling sesuai dengan teks diskusi?",["Media sosial buruk, jadi harus dilarang bagi semua remaja.","Berdasarkan dua pandangan, media sosial perlu dipakai dengan batas waktu dan pemeriksaan informasi.","Selain itu, perundungan siber juga merupakan masalah besar."],1,"Pilihan pertama memihak tanpa menimbang. Pilihan ketiga menambah argumen baru."]
+]});
+
+/* ---------- Bab 3 ---------- */
+aft(2,"Penanda selain pertentangan",{h:"Kata kerja untuk melaporkan pendapat",b:[
+["p","Teks diskusi sering melaporkan pendapat pihak lain. Pilihlah kata kerja yang tepat agar penulis tidak terkesan memihak."],
+["tbl",["Kata kerja","Kesan","Contoh"],[["berpendapat, menyatakan","Netral","Pihak yang setuju berpendapat bahwa media sosial memberi ruang berkreasi."],["menilai, menganggap","Menunjukkan penilaian pihak itu","Pihak yang tidak setuju menilai media sosial mudah membuat lupa waktu."],["mengkhawatirkan","Menunjukkan kecemasan","Sebagian orang tua mengkhawatirkan perundungan siber."],["menyarankan, mengusulkan","Mengarah ke solusi","Sekolah mengusulkan aturan waktu penggunaan ponsel."]]],
+["mc","Kata kerja yang paling netral untuk melaporkan pendapat pihak pro adalah…",["menuduh","berpendapat","membantah habis-habisan"],1,"“Berpendapat” hanya melaporkan, tanpa menambah penilaian penulis."]
+]});
+aft(2,"Kata kerja untuk melaporkan pendapat",{h:"Pola kalimat pendapat dan sanggahan",b:[
+["p","Berikut pola kalimat yang bisa kamu pakai. Ketuk kartu untuk melihat contohnya."],
+["cards",[["Menyatakan pendapat","Pola: Menurut saya, … karena … Contoh: Menurut saya, media sosial bermanfaat karena banyak akun membagikan materi belajar gratis."],["Menyanggah dengan santun","Pola: Saya memahami …, tetapi … Contoh: Saya memahami kekhawatiran itu, tetapi belum ada data yang menunjukkan semua remaja terganggu."],["Meminta bukti","Pola: Dapatkah Anda menyebutkan …? Contoh: Dapatkah Anda menyebutkan sumber dan tahun data itu?"],["Menyimpulkan","Pola: Dengan demikian, … Contoh: Dengan demikian, media sosial perlu dipakai dengan batas waktu."]]],
+["n","Sanggahan yang baik menyebut bagian yang disetujui lebih dulu, lalu menyampaikan keberatan beserta alasannya."]
+]});
+aft(2,"Pola kalimat pendapat dan sanggahan",{h:"Ejaan dan tanda baca penting",b:[
+["p","Ejaan mengikuti Pedoman Umum Ejaan Bahasa Indonesia (EYD V) dan KBBI. Empat hal berikut sering muncul pada teks diskusi."],
+["cards",[["Koma setelah konjungsi awal kalimat","Namun, pihak lain menilai … · Akan tetapi, tidak semua … · Selain itu, media sosial …"],["Koma sebelum “tetapi”","Media sosial memudahkan belajar, tetapi sering membuat lupa waktu."],["Huruf kapital","Awal kalimat dan nama diri ditulis kapital, misalnya TikTok, Instagram, dan APJII."],["Kata depan “di”","Dipisah bila menunjukkan tempat (di sekolah), serangkai bila awalan (dibaca, ditulis)."]]],
+["mc","Penulisan yang tepat adalah…",["Namun pihak lain menilai media sosial berisiko.","Namun, pihak lain menilai media sosial berisiko.","Namun; pihak lain menilai media sosial berisiko."],1,"Konjungsi di awal kalimat seperti “namun” diikuti koma."]
+]});
+
+/* ---------- Bab 4 ---------- */
+aft(3,"Data, fakta, dan kalimat objektif",{h:"Kata pemandu: fakta atau opini?",b:[
+["p","Beberapa petunjuk membantu menebak jenis kalimat dengan cepat. Petunjuk bukan aturan mutlak, jadi tetap tanyakan: bisa dicek atau tidak?"],
+["tbl",["Fakta cenderung memuat","Opini cenderung memuat"],[["Angka, tanggal, nama, tempat","Kata penilai: bagus, buruk, terbaik, berbahaya"],["Sumber dan tahun, misalnya (APJII, 2026)","Kata saran atau keharusan: seharusnya, sebaiknya, harus"],["Kata “mencapai”, “berjumlah”, “tercatat”","Kata “menurut saya”, “mungkin”, “rasanya”"]]],
+["mc","“Remaja sebaiknya tidak memakai media sosial lebih dari dua jam.”",["Fakta","Opini"],1,"“Sebaiknya” menandai saran atau pandangan pribadi."],
+["mc","“Survei APJII 2026 dilakukan pada 1 Februari sampai 15 Maret 2026.”",["Fakta","Opini"],0,"Ada tanggal dan sumber yang bisa dicek."]
+]});
+aft(3,"Kata pemandu: fakta atau opini?",{h:"Opini yang kuat ditopang fakta",b:[
+["p","Dalam teks diskusi, opini boleh dan perlu ada. Bedanya, opini yang kuat disertai alasan dan fakta yang bisa dicek."],
+["cards",[["Opini saja (lemah)","“Media sosial itu buruk bagi remaja.”"],["Opini + alasan (cukup kuat)","“Media sosial perlu dibatasi karena gulir tanpa akhir membuat pengguna sulit berhenti.”"],["Opini + alasan + fakta (kuat)","“Media sosial perlu dibatasi karena gulir tanpa akhir membuat pengguna sulit berhenti. Catatan waktu layar di ponsel dapat dipakai untuk memeriksa lama penggunaan.”"]]],
+["rv","Bagaimana mengubah “Game itu merusak” menjadi opini yang lebih kuat?","Tambahkan alasan dan bukti, misalnya: “Game perlu dibatasi pada hari sekolah karena sebagian siswa tidur larut. Hal ini dapat diperiksa lewat catatan waktu bermain di perangkat.”"]
+]});
+aft(3,"Opini yang kuat ditopang fakta",{h:"Hati-hati: angka bisa menyesatkan",b:[
+["p","Angka terlihat meyakinkan, tetapi belum tentu dapat dipercaya. Ketuk kartu untuk melihat empat jebakannya."],
+["cards",[["Angka tanpa sumber","“90% remaja kecanduan.” Siapa yang menghitung? Kapan?"],["Sumber terlalu lama","Data tahun lampau belum tentu cocok dengan keadaan sekarang."],["Data dipotong","Hanya menyebut angka yang mendukung, padahal ada angka lain yang berbeda."],["Angka benar, kesimpulan keliru","Data lama akses media sosial tidak otomatis membuktikan dampaknya pada nilai."]]],
+["n","Fakta yang bisa dicek adalah fakta yang sumbernya jelas. Angka tanpa sumber belum dapat dipercaya sebagai fakta."]
+]});
+
+/* ---------- Bab 5 ---------- */
+aft(4,"Menguji satu argumen pelan-pelan",{h:"Memperkuat argumen yang lemah",b:[
+["p","Menilai saja belum cukup. Kamu juga bisa memperbaiki argumen yang lemah dengan menambahkan alasan dan bukti serta mengurangi kata yang menyamaratakan."],
+["tbl",["Argumen lemah","Diperkuat"],[["Semua remaja kecanduan ponsel.","Sebagian remaja sulit lepas dari ponsel. Dalam pengamatan kelas selama satu minggu, … dari … siswa membuka ponsel saat pelajaran."],["Pokoknya ponsel dilarang.","Ponsel perlu diatur saat pelajaran karena notifikasi memecah fokus. Hal ini dapat diperiksa lewat pengamatan guru."],["Temanku nilainya turun gara-gara ponsel.","Pengalaman satu teman belum cukup. Kumpulkan data nilai dan waktu pemakaian dari banyak siswa sebelum menyimpulkan."]]],
+["n","Titik-titik (…) diisi dengan hasil pengamatan atau datamu sendiri. Jangan mengarang angka."],
+["mc","Cara terbaik memperkuat “Semua orang setuju ponsel itu berbahaya” adalah…",["Mengulang kalimat itu dengan nada lebih tegas","Mengganti “semua orang” dengan kelompok yang jelas dan menambahkan data","Menambahkan kata “pasti”"],1,"Perjelas siapa yang dimaksud dan sertakan data yang bisa dicek."]
+]});
+aft(4,"Memperkuat argumen yang lemah",{h:"Menilai bukan berarti memilih sisi",b:[
+["p","Saat menilai argumen, kamu bertindak seperti hakim: yang dinilai adalah kualitas alasan dan buktinya, bukan apakah kamu setuju."],
+["rv","Argumen pihak yang kamu dukung ternyata lemah, sedangkan argumen lawan kuat. Apa yang adil dilakukan?","Akui bahwa argumen lawan kuat dan bahwa argumen pihakmu perlu diperkuat. Penilaian yang jujur membuat pendapatmu lebih dipercaya."],
+["mc","Penilai argumen yang adil akan…",["Selalu menilai kuat argumen pihak yang ia setujui","Memakai tiga pertanyaan uji yang sama untuk kedua pihak","Menilai lemah semua argumen lawan"],1,"Ukuran yang sama dipakai untuk pro maupun kontra."]
+]});
+
+/* ---------- Bab 6 ---------- */
+aft(5,"Empat cek bukti",{h:"Lima pertanyaan cek cepat",b:[
+["p","Sebelum memakai data atau kutipan sebagai bukti, ajukan lima pertanyaan ini."],
+["cards",[["Siapa yang membuat?","Lembaga resmi atau penulis yang jelas lebih dapat dipercaya daripada akun anonim."],["Kapan dibuat?","Makin baru, makin cocok untuk keadaan sekarang."],["Bagaimana datanya dikumpulkan?","Berapa responden, siapa mereka, dan di mana?"],["Berlaku untuk siapa?","Contoh: survei APJII 2026 berlaku untuk responden minimal 13 tahun, tidak khusus remaja."],["Apa yang tidak ditunjukkan?","Data durasi tidak menunjukkan kegiatan yang dilakukan atau dampaknya."]]],
+["n","Lima pertanyaan ini memperluas empat cek bukti sebelumnya."]
+]});
+aft(5,"Cocokkan klaim dengan data",{h:"Tiga status klaim",b:[
+["p","Setelah membandingkan klaim dengan data, klaim bisa berstatus <b>didukung</b>, <b>tidak didukung</b>, atau <b>belum cukup didukung</b>."],
+["cards",[["Didukung","Angka pada data sejalan dengan klaim dan berlaku untuk kelompok yang dimaksud. Contoh: “Sebagian besar responden mengakses media sosial 1 sampai 3 jam per hari” (82,8%)."],["Tidak didukung","Angka berlawanan dengan klaim. Contoh: “Sebagian besar remaja mengakses lebih dari 4 jam sehari”, padahal hanya 2,4% responden."],["Belum cukup didukung","Data benar, tetapi tidak mengukur hal yang diklaim. Contoh: “Media sosial membuat tugas tertunda”, padahal data hanya mengukur durasi."]]],
+["mc","Klaim: “TikTok adalah media sosial yang paling sering diakses (31,8%, APJII 2026).” Statusnya…",["Didukung","Tidak didukung","Belum cukup didukung"],0,"Klaim sejalan dengan data pada sumbernya: TikTok berada di posisi teratas."]
+]});
+aft(5,"Tiga status klaim",{h:"Menulis temuan dengan rapi",b:[
+["p","Hasil pemeriksaan klaim sebaiknya ditulis dalam kalimat yang menyebut data, status klaim, dan batas data."],
+["tbl",["Bagian","Pola kalimat","Contoh"],[["Data","Data … menunjukkan …","Data APJII 2026 menunjukkan 2,4% responden mengakses media sosial lebih dari 4 jam per hari."],["Status","Karena itu, klaim … (didukung, tidak didukung, atau belum cukup didukung).","Karena itu, klaim bahwa sebagian besar remaja mengakses lebih dari 4 jam tidak didukung data."],["Batas data","Namun, data ini …","Namun, data ini tidak khusus remaja dan tidak mengukur dampak."]]],
+["n","Menyebut batas data adalah ciri pemeriksaan bukti yang jujur, dan dinilai pada rubrik tanggapan tertulis."]
+]});
+
+/* ---------- Bab 7 ---------- */
+aft(6,"Lima argumen lemah",{h:"Dua jebakan lagi",b:[
+["p","Selain lima argumen lemah tadi, ada dua jebakan yang sering muncul saat berdebat. Keduanya dilatih pada tantangan bab ini dan di arena Sidang."],
+["cards",[["Menakut-nakuti","Memakai rasa takut tanpa bukti. Contoh: “Kalau ponsel tidak dilarang, sekolah ini akan hancur!” Perbaiki: sebutkan akibat nyata yang bisa diperiksa."],["Hitam-putih","Hanya menawarkan dua pilihan ekstrem. Contoh: “Larang total atau bebas total!” Perbaiki: cari jalan tengah, misalnya boleh dengan syarat."]]],
+["mc","“Pilih saja: media sosial dilarang total atau dibebaskan total!” Jebakan yang dipakai adalah…",["Menakut-nakuti","Hitam-putih","Serangan pribadi"],1,"Hanya ada dua pilihan ekstrem, padahal ada jalan tengah."]
+]});
+aft(6,"Menanggapi argumen lemah dengan santun",{h:"Jebakan di kolom komentar",b:[
+["p","Jebakan nalar sering muncul di media sosial. Ketuk komentar untuk melihat jebakannya."],
+["tap",[["“Kamu cuma iri, makanya bilang media sosial itu buruk.”","SERANGAN PRIBADI: orangnya diserang, bukan argumennya."],["“Semua orang main TikTok, jadi pasti aman.”","IKUT-IKUTAN: banyak yang memakai belum berarti aman."],["“Kalau anak main medsos, masa depannya pasti hancur.”","MENAKUT-NAKUTI dan MENYAMARATAKAN: tanpa bukti dan memakai kata “pasti”."],["“Pilih saja: ikut tren atau dikucilkan.”","HITAM-PUTIH: ada pilihan lain di antaranya."]]],
+["n","Kebiasaan ini membuatmu lebih cermat sebelum membagikan atau menanggapi sebuah komentar."]
+]});
+
+/* ---------- Bab 8 ---------- */
+aft(7,"Rumus tanggapan",{h:"Kalimat awal untuk tiap bagian",b:[
+["p","Kalimat awal membantu kamu memulai. Murid yang sudah siap boleh menulis dengan kalimatnya sendiri."],
+["tbl",["Bagian","Kalimat awal pilihan"],[["Sikap","Saya pro atau kontra terhadap … karena …"],["Alasan","Alasan utama saya adalah …"],["Bukti","Buktinya, … (sebut teks, paragraf, atau data dan tahunnya)."],["Catatan","Meskipun demikian, bukti ini belum menunjukkan …"],["Menanggapi sisi lain (pilihan)","Saya memahami pendapat pihak yang …, tetapi …"]]],
+["n","Target: tiga sampai lima kalimat. Minimal tiga kalimat: sikap, satu alasan, satu bukti."]
+]});
+aft(7,"Sebelum dan sesudah",{h:"Daftar periksa tanggapan",b:[
+["p","Sebelum mengumpulkan, ketuk tiap butir dan periksa tulisanmu. Daftar ini selaras dengan rubrik tanggapan tertulis pada modul ajar."],
+["tap",[["Sikap jelas?","Pembaca langsung tahu kamu pro atau kontra."],["Ada alasan?","Alasan menjelaskan mengapa kamu bersikap begitu dan sesuai dengan isu."],["Bukti dapat dicek dan cocok?","Bukti dari teks atau infografik, disebut sumbernya, dan cocok dengan alasan. Sebutkan batas data bila ada."],["Bahasa baku dan santun?","Tidak memakai kata gak atau banget dan tidak menyerang pribadi. Periksa koma setelah konjungsi dan penulisan kata baku."],["Panjang tiga sampai lima kalimat?","Singkat, tetapi lengkap."]]]
+]});
+
+
+/* ===== tautan podcast dan infografik (modul: A.1, A.3, A.5) ===== */
+const POD="https://youtu.be/zCUu01hCna4?si=DHS5nz4YKh0Qxcq6",INF="https://data.goodstats.id/statistic/durasi-publik-indonesia-akses-media-sosial-pada-2026-PnFOW";
+aft(0,"Teks diskusi ada di mana saja?",{h:"Simak podcast: diskusi secara lisan",b:[
+["p","Teks diskusi juga hadir dalam bentuk lisan. Simak potongan podcast “Remaja dan Media Sosial” (Podcast Kreasi XII D1, Podcast SISMA, YouTube). Bagian ini <b>opsional</b>, sebagai pengayaan dan latihan memirsa."],
+["link",POD,"▶ Tonton podcast di YouTube","Butuh internet. Tanpa koneksi, lewati halaman ini; materi lain tetap bisa dipelajari."],
+["p","Sambil menyimak, catat tiga hal: <b>(1)</b> isu yang dibahas, <b>(2)</b> satu pendapat pro beserta alasannya, <b>(3)</b> satu pendapat kontra beserta alasannya."],
+["rv","Setelah menyimak, apakah kedua sisi mendapat ruang yang seimbang? Bagaimana kamu menilainya?","Periksa apakah pro dan kontra sama-sama diberi alasan dan contoh. Jika satu sisi hanya dijelekkan tanpa alasan, pembahasannya kurang seimbang."],
+["n","Gunakan lima ciri teks diskusi dari halaman sebelumnya sebagai daftar periksa saat menyimak."]
+]});
+aft(4,"Latihan dari tiket keluar",{h:"Pengayaan: nilai argumen dari podcast",b:[
+["p","Untuk pengayaan, simak kembali potongan podcast “Remaja dan Media Sosial”, lalu nilai pendapat pembicara dengan tiga pertanyaan uji."],
+["link",POD,"▶ Tonton podcast di YouTube","Butuh internet. Halaman ini opsional."],
+["cards",[["Langkah 1","Pilih satu pendapat pembicara yang menurutmu menarik."],["Langkah 2","Ajukan tiga pertanyaan uji: apa alasannya, adakah contoh atau data yang bisa dicek, dan berlaku untuk banyak orang atau hanya satu pengalaman?"],["Langkah 3","Tentukan kuat, cukup kuat, atau lemah, lalu tulis alasannya satu atau dua kalimat."]]],
+["n","Hasil pengayaan menjadi catatan perkembangan dan tidak memengaruhi ketuntasan tujuan pembelajaran."]
+]});
+RD[5].r.find(p=>p.h==="Baca infografik APJII 2026").b.splice(1,0,
+["cards",[["Judul","Durasi Publik Indonesia Akses Media Sosial pada 2026 (GoodStats Data)."],["Sumber data","Survei APJII 2026: Penetrasi Internet dan Perilaku Penggunaan Internet."],["Waktu dan responden","1 Februari sampai 15 Maret 2026, 8.700 responden berusia minimal 13 tahun di 38 provinsi."]]],
+["link",INF,"📊 Buka infografik asli","Butuh internet. Angka pada batang di bawah mengikuti tabel infografik pada modul, jadi tetap bisa dipelajari tanpa membukanya."]);
+
+bk();bab(0);
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+if(!window.THREE)return;const T3=THREE;let R;try{R=new T3.WebGLRenderer({antialias:true})}catch(e){return}
+R.setClearColor(0x808080);R.domElement.setAttribute('aria-hidden','true');R.domElement.style.cssText='width:100%;height:100%;display:block';
+const sc=new T3.Scene(),cam=new T3.PerspectiveCamera(36,1.5,.1,60);
+const add=(g,c,p,x,y,z)=>{const m=new T3.Mesh(g,new T3.MeshStandardMaterial({color:c,roughness:.55,metalness:0}));m.position.set(x||0,y||0,z||0);p.add(m);return m};
+const el=(r,a,b,c,col,p,x,y,z)=>{const m=add(new T3.SphereGeometry(r,24,16),col,p,x,y,z);m.scale.set(a,b,c);return m};
+const cy=(r,l,col,p,x,y,z)=>add(new T3.CylinderGeometry(r,r*.9,l,16),col,p,x,y,z);
+sc.add(new T3.AmbientLight(0xffffff,.6));
+const kl=new T3.DirectionalLight(0xfff1d6,1);kl.position.set(4,8,8);sc.add(kl);
+const fi=new T3.DirectionalLight(0xdde6ff,.35);fi.position.set(-6,3,5);sc.add(fi);
+const rm=new T3.DirectionalLight(0xffffff,.45);rm.position.set(-3,5,-6);sc.add(rm);
+/* ruang sidang */
+const ck=document.createElement('canvas');ck.width=ck.height=64;const g2=ck.getContext('2d');g2.fillStyle='#6b6458';g2.fillRect(0,0,64,64);g2.fillStyle='#a49a88';g2.fillRect(0,0,32,32);g2.fillRect(32,32,32,32);
+const tx=new T3.CanvasTexture(ck);tx.wrapS=tx.wrapT=T3.RepeatWrapping;tx.repeat.set(20,12);
+const fl=new T3.Mesh(new T3.PlaneGeometry(40,24),new T3.MeshLambertMaterial({map:tx}));fl.rotation.x=-Math.PI/2;sc.add(fl);
+add(new T3.PlaneGeometry(40,14),0xa8a090,sc,0,7,-4.5);
+for(let i=-4;i<=4;i++)add(new T3.BoxGeometry(.8,9,.6),0xc8c0ae,sc,i*3.2+1.6,4.5,-4.2);
+[-6.4,0,6.4].forEach(x=>{add(new T3.BoxGeometry(1.7,3.5,.2),0x4a4438,sc,x,3.8,-3.9);add(new T3.BoxGeometry(1.4,3.2,.2),0xf4f0e0,sc,x,3.8,-3.8)});
+const cv=document.createElement('canvas');cv.width=cv.height=128;const cx=cv.getContext('2d');cx.font='90px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillStyle='#4a4438';cx.fillText('⚖',64,70);
+const sp0=new T3.Sprite(new T3.SpriteMaterial({map:new T3.CanvasTexture(cv),transparent:true,opacity:.6}));sp0.scale.set(2.2,2.2,1);sp0.position.set(0,6.6,-3.6);sc.add(sp0);
+add(new T3.BoxGeometry(3.6,1.3,1.1),0x4a3a28,sc,0,.65,1.1);add(new T3.BoxGeometry(3.7,.12,1.2),0x9a8a66,sc,0,1.32,1.1);
+[-3.6,3.6].forEach(x=>{add(new T3.BoxGeometry(2.2,1,.9),0x3a2d20,sc,x,.5,1.5);add(new T3.BoxGeometry(2.3,.1,1),0x9a8a66,sc,x,1.02,1.5)});
+add(new T3.BoxGeometry(1.3,1,.8),0x3a2d20,sc,-1.8,.5,1);add(new T3.BoxGeometry(1.4,.1,.9),0x9a8a66,sc,-1.8,1.02,1);
+/* karakter 3D bergaya animasi modern: kepala besar, badan ramping */
+const SK={n:0xe2a977,g:0xf0c9a0,h:0xf6dcc0,w:0xd99a6c},HR={n:0x3a2a22,g:0x161616,h:0xffffff,w:0x4a2c1a},IR={n:0x5a3a22,g:0x222222,h:0x4a6a8a,w:0x3a2a1a};
+const SU={n:0xf2f2f2,g:0x3a3a42,h:0x1a1a24,w:0x8a2be2},PN={n:0x3f78c2,g:0x222228,w:0x4a3a66},SHO={n:0x6b3f22,g:0x111111,w:0x222222};
+const BASE={aLx:0,aRx:0,aLz:.08,aRz:.08,fLx:-.15,fRx:-.15,hx:0,hy:0,hz:0};
+function mk(k,x,y,z,ry,s){
+const root=new T3.Group(),body=new T3.Group();root.add(body);root.position.set(x,y,z);root.rotation.y=ry;root.scale.setScalar(s);sc.add(root);
+const su=SU[k],sk=SK[k];
+if(k=='h'){const r=cy(.46,1.5,su,body,0,1.35,0);r.geometry=new T3.CylinderGeometry(.46,.8,1.5,24);r.scale.z=.75;
+const st=add(new T3.CylinderGeometry(.475,.825,1.5,8,1,true,-.11,.22),0xb8372c,body,0,1.35,0);st.scale.z=.75;st.material.side=T3.DoubleSide;el(.2,1,.8,.6,0xffffff,body,0,2,.25)}
+else{const t=cy(.4,1.1,su,body,0,1.55,0);t.geometry=new T3.CylinderGeometry(.4,.31,1.1,24);t.scale.z=.68;
+el(.36,1,.5,.75,PN[k],body,0,1.02,0);
+const bt=add(new T3.CylinderGeometry(.315,.315,.08,24),0x5a3a24,body,0,1.02,0);bt.scale.z=.68;add(new T3.BoxGeometry(.1,.08,.03),0xcfcfcf,body,0,1.02,.22);
+if(k=='g'){add(new T3.BoxGeometry(.22,.4,.03),0xffffff,body,0,1.85,.25);const ti=add(new T3.CylinderGeometry(.41,.37,.6,8,1,true,-.1,.2),0xb8372c,body,0,1.75,0);ti.scale.z=.68;ti.material.side=T3.DoubleSide}
+if(k=='w')el(.05,1,1,1,0xe8b923,body,0,1.8,.25);
+for(const q of[-1,1]){cy(.13,1,PN[k],body,q*.2,.5,0);el(.2,1,.55,1.5,SHO[k],body,q*.2,.1,.1);if(k=='n')cy(.145,.09,0x5a92d6,body,q*.2,.3,0)}}
+el(.17,1,.8,1,su,body,0,2.12,0);cy(.11,.3,sk,body,0,2.05,0);
+if(k!='h')add(new T3.TorusGeometry(.16,.045,8,18),k=='g'?0xffffff:su,body,0,2.1,0).rotation.x=Math.PI/2;
+const arm=q=>{const a=new T3.Group();a.position.set(q*.46,2.0,0);body.add(a);el(.15,1,1,1,su,a,0,0,0);cy(.1,.6,su,a,0,-.3,0);
+const f=new T3.Group();f.position.y=-.6;a.add(f);cy(.085,.5,k=='n'?sk:su,f,0,-.25,0);if(k=='n')cy(.105,.1,su,f,0,-.03,0);el(.12,1,1.15,.85,sk,f,0,-.55,0);return[a,f]};
+const[aL,fL]=arm(-1),[aR,fR]=arm(1);
+if(k=='h'){const gv=new T3.Group();gv.position.set(0,-.55,.1);fR.add(gv);add(new T3.CylinderGeometry(.03,.03,.4,6),0x6b4a2a,gv).rotation.x=Math.PI/2;add(new T3.CylinderGeometry(.09,.09,.3,10),0xc9a23a,gv,0,0,.2).rotation.z=Math.PI/2}
+const head=new T3.Group();head.position.y=2.1;body.add(head);const hd=new T3.Group();hd.position.y=.5;head.add(hd);
+el(.56,1,1.05,.95,sk,hd);[-1,1].forEach(q=>el(.1,1,1.2,.6,sk,hd,q*.56,0,0));
+add(new T3.SphereGeometry(.6,24,16,0,6.2832,0,1.45),HR[k],hd,0,.03,-.05).rotation.x=-.6;
+if(k=='n')el(.26,1.1,.7,1,HR[k],hd,0,.58,.28).rotation.x=-.3;
+if(k=='w')el(.62,1,1.4,.55,HR[k],hd,0,-.3,-.3);
+if(k=='h'){el(.24,1.1,1.1,.7,0xffffff,hd,0,-.42,.28);add(new T3.BoxGeometry(.36,.07,.07),0xffffff,hd,0,-.14,.53);[-1,1].forEach(q=>el(.15,1,1,1,0xffffff,hd,q*.58,-.05,-.05))}
+const eyes=[],pup=[],brw=[];
+for(const q of[-1,1]){const e=new T3.Group();e.position.set(q*.19,.06,.49);hd.add(e);el(.11,1,1.25,.4,0xffffff,e);
+const ig=new T3.Group();ig.position.z=.04;e.add(ig);el(.068,1,1.1,.3,IR[k],ig);el(.036,1,1,.3,0x111111,ig,0,0,.02);el(.016,1,1,1,0xffffff,ig,.025,.03,.045);
+pup.push(ig);eyes.push(e);
+brw.push(add(new T3.BoxGeometry(.2,.045,.04),k=='h'?0xcccccc:HR[k],hd,q*.19,.27,.45));
+if(k=='g'||k=='n')add(new T3.TorusGeometry(.15,.02,8,20),k=='n'?0x4a3322:0x111111,hd,q*.19,.06,.53)}
+el(.06,1,1,1,sk,hd,0,-.03,.57);
+const mouth=el(.1,1,1,1,0x7a2a24,hd,0,-.2,.5);mouth.scale.set(1.4,.12,.4);
+const sw=el(.07,1,1.3,1,0xbfe8ff,hd,.6,.3,.1);sw.visible=false;
+const c={k,root,body,head,aL,fL,aR,fR,eyes,pup,brw,mouth,sw,by:y,j:Object.assign({},BASE),pose:'idle',fa:'',t0:0,say:false,mo:0,mw:1,hov:false,react:-9,ll:0,lt:-9,ch:'',nb:2,bl:0,ph:Math.random()*6};
+root.userData.c=c;return c}
+const C3={n:mk('n',-3.6,0,0,.35,1),h:mk('h',0,.55,.2,0,1),g:mk('g',3.6,0,0,-.35,1),w:mk('w',-1.8,0,.2,.25,.92)},CH=Object.values(C3);
+/* pose: fungsi waktu -> sudut sendi (diredam agar mengalir) */
+const D={idle:()=>({}),
+talk:t=>({aRx:-.75+.25*Math.sin(t*5),aRz:.3,fRx:-.9+.3*Math.sin(t*5+1),aLx:-.35+.15*Math.sin(t*4),aLz:.2,fLx:-.6,hz:.04*Math.sin(t*3)}),
+point:()=>({aRx:-1.45,aRz:.25,fRx:-.1,hy:-.15,hz:-.07}),
+think:()=>({aRx:-1.1,fRx:-2.2,hz:-.1,hx:.08}),
+sweat:t=>({aLx:-.9,aRx:-.9,fLx:-1.6,fRx:-1.6,hy:.12*Math.sin(t*28),hx:.1}),
+cheer:t=>({aLz:2.7,aRz:2.7,hx:-.2+.05*Math.sin(t*9)}),
+nod:t=>({hx:.2*Math.sin(t*10)*(t<1)}),
+no:t=>({hy:.4*Math.sin(t*16)*(t<.8),aLz:.5,aRz:.5}),
+slam:t=>{const u=t<.6?(t<.4?-2.6:-2.7):-.95,f=t<.6?-.4:-.15;return{aLx:u,aRx:u,fLx:f,fRx:f,hx:t<.6?-.15:.3}},
+gavel:t=>({aRx:-1.2-.9*Math.abs(Math.sin(t*9)),fRx:-.5,hy:-.05})};
+/* bentuk mulut (viseme) dari huruf yang sedang diketik */
+const VIS={};[['a',1,1.05],['e',.55,1.3],['i',.4,1.45],['o',.8,.65],['u',.6,.55],['b',0,1],['m',0,1],['p',0,1],[' ',0,1],[',',0,1],['.',0,1]].forEach(a=>VIS[a[0]]=[a[1],a[2]]);
+let mx=0,my=0;
+function upd(c,dt,now){
+const pt=now-c.t0,el=document.getElementById('tx'),s=el&&c.say?el.textContent:'';
+if(c.say&&s.length!=c.ll){c.ll=s.length;c.lt=now;c.ch=s.slice(-1).toLowerCase()}
+const sp=c.say&&now-c.lt<.5,pn=c.pose=='idle'&&sp?'talk':c.pose;
+const tg=Object.assign({},BASE,D[pn](pt));
+if(sp)tg.hx+=.04*Math.sin(now*8);
+if(c.hov&&c.pose=='idle'&&!sp){tg.aRz=2.2+.3*Math.sin(now*9);tg.aRx=0;tg.fRx=-.3}
+const k=Math.min(1,dt*8),j=c.j;for(const n in tg)j[n]+=(tg[n]-j[n])*k;
+c.aL.rotation.set(j.aLx,0,-j.aLz);c.aR.rotation.set(j.aRx,0,j.aRz);c.fL.rotation.x=j.fLx;c.fR.rotation.x=j.fRx;
+const ly=Math.max(-.5,Math.min(.5,(mx*7-c.root.position.x)*.07));
+c.head.rotation.set(j.hx-my*.1,j.hy+ly*.8,j.hz);
+c.pup.forEach(p=>{p.position.x+=(ly*.05-p.position.x)*.2;p.position.y+=(my*.03-p.position.y)*.2});
+c.body.scale.y=1+.012*Math.sin(now*2.4+c.ph);c.body.rotation.z=.012*Math.sin(now*1.3+c.ph);
+if(now>c.nb){c.bl=now+.12;c.nb=now+2+Math.random()*3.5}
+c.eyes.forEach(e=>e.scale.y=now<c.bl?.1:1);
+let o=0,w=1;if(sp&&now-c.lt<.12){const v=VIS[c.ch];o=v?v[0]:.3;w=v?v[1]:1}
+if(c.fa=='s')o=Math.max(o,.55);if(c.fa=='h'){w*=1.4;o=Math.max(o,.08)}
+c.mo+=(o-c.mo)*Math.min(1,dt*30);c.mw+=(w-c.mw)*Math.min(1,dt*20);c.mouth.scale.set(1.4*c.mw,.12+c.mo*1.6,.4+c.mo*.4);
+const ang=c.fa=='a'?.35:0,up=c.fa=='s'?.08:0;
+c.brw.forEach((b,i)=>{b.rotation.z+=((i?1:-1)*ang-b.rotation.z)*.2;b.position.y+=(.27+up+(sp?.015*Math.sin(now*9):0)-b.position.y)*.2});
+c.sw.visible=c.pose=='sweat';if(c.sw.visible)c.sw.position.y=.3-((pt*1.2)%1)*.3;
+let hop=0;const rt=now-c.react;if(rt<.7){hop=.3*Math.sin(Math.PI*rt/.7);c.head.rotation.y+=.5*Math.sin(rt*10)*(1-rt/.7)}
+c.root.position.y=c.by+hop}
+/* kamera sinematik */
+let cT={x:0,y:2.1,z:10.6,lx:0,ly:1.7},cc=Object.assign({},cT),cw=0,ch=0,last=performance.now()/1e3;
+function loop(){requestAnimationFrame(loop);const now=performance.now()/1e3,dt=Math.min(.05,now-last);last=now;
+if(!R.domElement.isConnected){const h=document.getElementById('c3h');if(!h)return;h.appendChild(R.domElement)}
+const p=R.domElement.parentNode,w=p.clientWidth,h=p.clientHeight;
+if(w&&h&&(w!=cw||h!=ch)){cw=w;ch=h;R.setPixelRatio(Math.min(devicePixelRatio,2));R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+CH.forEach(c=>upd(c,dt,now));
+
+const kk=Math.min(1,dt*3.2);for(const n in cT)cc[n]+=(cT[n]-cc[n])*kk;
+cam.position.set(cc.x+mx*.5,cc.y+my*.25,cc.z);cam.lookAt(cc.lx+mx*.2,cc.ly,0);R.render(sc,cam)}
+/* interaksi: tatapan mengikuti kursor, sapa saat disentuh, loncat saat diklik */
+const rc=new T3.Raycaster();
+function pick(){rc.setFromCamera({x:mx,y:my},cam);const h=rc.intersectObjects(CH.filter(c=>c.root.visible).map(c=>c.root),true)[0];if(!h)return null;let o=h.object;while(o&&!o.userData.c)o=o.parent;return o?o.userData.c:null}
+function setM(e){const r=R.domElement.getBoundingClientRect();if(!r.width)return false;mx=Math.max(-1,Math.min(1,(e.clientX-r.left)/r.width*2-1));my=Math.max(-1,Math.min(1,1-(e.clientY-r.top)/r.height*2));return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom}
+addEventListener('pointermove',e=>{const ins=setM(e),h=ins?pick():null;CH.forEach(c=>c.hov=c==h);R.domElement.style.cursor=h?'pointer':''});
+addEventListener('pointerdown',e=>{if(e.target==R.domElement){setM(e);const h=pick();if(h)h.react=performance.now()/1e3}});
+/* ganti API panggung lama (SVG) dengan versi 3D; logika game tidak berubah */
+window.stage=()=>'<div class="stage"><div class="shaker" id="shk"><div id="c3h"></div></div><div class="fl" id="fl"></div><div class="st" id="st"></div></div><div class="tb" id="tb" onclick="adv()"><span class="nm" id="nm"></span><span id="tx"></span><span class="ar">▼</span></div>';
+window.P=(k,po,fa)=>{const c=C3[k];if(!c)return;c.pose=D[po]?po:'idle';c.fa=fa=='a'||fa=='s'||fa=='h'?fa:'';c.t0=performance.now()/1e3};
+window.talk=(k,on)=>{const c=C3[k];if(c)c.say=on};
+window.resetP=()=>['n','h','g','w'].forEach(k=>P(k,'idle'));
+window.cut=s=>{const v=SH[s];if(!v)return;const tx=(v[0]-1)*3.6,cl=v[1]>1.3;cT={x:tx*(cl?.9:.5),y:cl?2.5:2.2,z:cl?5.4:10.6,lx:tx,ly:cl?2.45:1.8}};
+loop();
+})();
+</script>
+<script>if('serviceWorker' in navigator&&location.protocol!=='file:'){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
+</body>
+</html>
