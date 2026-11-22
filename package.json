@@ -1,0 +1,11 @@
+{
+  "name": "sidang-teks-diskusi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sidang Teks Diskusi, Bahasa Indonesia Kelas VIII",
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  }
+}
